@@ -1,16 +1,13 @@
-<a href="https://chat.vercel.ai/">
-  <img alt="Next.js 14 and App Router-ready AI chatbot." src="https://chat.vercel.ai/opengraph-image.png">
-  <h1 align="center">Next.js AI Chatbot</h1>
-</a>
-
+# [Task Companion UI](https://task-companion.vercel.app/)
+![AI Chat Screenshot](docs/ai-chat-screenshot.png)
 <p align="center">
-  An open-source AI chatbot app template built with Next.js, the Vercel AI SDK, OpenAI, and Vercel KV.
+  Task Companion is an digital assistant that uses chat and visual interfaces to manage your to-do list and schedule, learning from your interactions to become more helpful over time.
 </p>
 
 <p align="center">
   <a href="#features"><strong>Features</strong></a> ·
-  <a href="#model-providers"><strong>Model Providers</strong></a> ·
-  <a href="#deploy-your-own"><strong>Deploy Your Own</strong></a> ·
+  <a href="#features"><strong>Roadmap</strong></a> ·
+  <a href="#features"><strong>Creating a Database</strong></a> ·
   <a href="#running-locally"><strong>Running locally</strong></a> ·
   <a href="#authors"><strong>Authors</strong></a>
 </p>
@@ -18,28 +15,37 @@
 
 ## Features
 
-- [Next.js](https://nextjs.org) App Router
-- React Server Components (RSCs), Suspense, and Server Actions
-- [Vercel AI SDK](https://sdk.vercel.ai/docs) for streaming chat UI
-- Support for OpenAI (default), Anthropic, Cohere, Hugging Face, or custom AI chat models and/or LangChain
-- [shadcn/ui](https://ui.shadcn.com)
-  - Styling with [Tailwind CSS](https://tailwindcss.com)
-  - [Radix UI](https://radix-ui.com) for headless component primitives
-  - Icons from [Phosphor Icons](https://phosphoricons.com)
-- Chat History, rate limiting, and session storage with [Vercel KV](https://vercel.com/storage/kv)
-- [NextAuth.js](https://github.com/nextauthjs/next-auth) for authentication
+- OpenAI `gpt-3.5-turbo` powered chat interface.
+- Chat History & rate limiting.
+- GitHub authentication with [NextAuth.js](https://github.com/nextauthjs/next-auth)
 
-## Model Providers
+## Roadmap
 
-This template ships with OpenAI `gpt-3.5-turbo` as the default. However, thanks to the [Vercel AI SDK](https://sdk.vercel.ai/docs), you can switch LLM providers to [Anthropic](https://anthropic.com), [Cohere](https://cohere.com/), [Hugging Face](https://huggingface.co), or using [LangChain](https://js.langchain.com) with just a few lines of code.
+- User interface to manage the user's to-do list (left-pane).
+- A chat like activity feed of every interaction with the application (right-pane).
+- Ability for the LLM to answer questions about created tasks.
+- AI can ask questions and make suggestions about created or modified tasks.
+- AI creates tasks.
+- AI suggests tasks modifications (priority, deadline, title, description, subtasks, etc).
+- AI responds to user app interactions (complete task, change deadline, etc)
+- AI suggests new tasks.
+- AI set task reminders.
+- AI responds to external events (location, email, etc)
+- Ability to learn from user feedback and confirmations to improve the LLM's accuracy.
+- Runs on device with fallback to cloud LLM when in doubt.
 
-## Deploy Your Own
+## Deployment
 
-You can deploy your own version of the Next.js AI Chatbot to Vercel with one click:
+### Deploy to Vercel
 
+See [Vercel Deployments](https://vercel.com/docs/deployments/overview).
+
+Or, start with the following one-click template, and then manually swap in the Task Companion UI code.  
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?demo-title=Next.js+Chat&demo-description=A+full-featured%2C+hackable+Next.js+AI+chatbot+built+by+Vercel+Labs&demo-url=https%3A%2F%2Fchat.vercel.ai%2F&demo-image=%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F4aVPvWuTmBvzM5cEdRdqeW%2F4234f9baf160f68ffb385a43c3527645%2FCleanShot_2023-06-16_at_17.09.21.png&project-name=Next.js+Chat&repository-name=nextjs-chat&repository-url=https%3A%2F%2Fgithub.com%2Fvercel-labs%2Fai-chatbot&from=templates&skippable-integrations=1&env=OPENAI_API_KEY%2CAUTH_GITHUB_ID%2CAUTH_GITHUB_SECRET%2CAUTH_SECRET&envDescription=How+to+get+these+env+vars&envLink=https%3A%2F%2Fgithub.com%2Fvercel-labs%2Fai-chatbot%2Fblob%2Fmain%2F.env.example&teamCreateStatus=hidden&stores=[{"type":"kv"}])
 
-## Creating a KV Database Instance
+The python backend is still a work in progress. No documentation exists as of writing this document.
+
+### Creating a KV Database Instance
 
 Follow the steps outlined in the [quick start guide](https://vercel.com/docs/storage/vercel-kv/quickstart#create-a-kv-database) provided by Vercel. This guide will assist you in creating and configuring your KV database instance on Vercel, enabling your application to interact with it.
 
@@ -62,10 +68,15 @@ pnpm dev
 
 Your app template should now be running on [localhost:3000](http://localhost:3000/).
 
-## Authors
+## Authors & Attribution
 
-This library is created by [Vercel](https://vercel.com) and [Next.js](https://nextjs.org) team members, with contributions from:
+### Chat AI Vercel Template
+The starting point of this project is the [chat-ai vercel template](https://github.com/vercel/ai-chatbot) created by [Vercel](https://vercel.com) and [Next.js](https://nextjs.org) team members, with contributions from:
 
 - Jared Palmer ([@jaredpalmer](https://twitter.com/jaredpalmer)) - [Vercel](https://vercel.com)
 - Shu Ding ([@shuding\_](https://twitter.com/shuding_)) - [Vercel](https://vercel.com)
 - shadcn ([@shadcn](https://twitter.com/shadcn)) - [Vercel](https://vercel.com)
+
+### Task Companion UI
+However, all subsequent development of the Task Companion UI is primarily by
+[reubenjohn](https://github.com/reubenjohn). See the Git history for details.
