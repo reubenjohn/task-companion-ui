@@ -23,6 +23,21 @@ import { Button } from '../ui/button'
 import { Input } from '../ui/input'
 
 const IS_PREVIEW = process.env.VERCEL_ENV === 'preview'
+
+export interface TaskProps extends React.ComponentProps<'div'> {
+    key: string
+    title: string
+}
+
+export function Task({ key, title }: TaskProps) {
+    return (
+        <li key={key} className='flex rounded-lg border bg-background p-2 my-2'>
+            <input type='checkbox' className='m-2'></input>
+            <span className='input' role='textbox' contentEditable style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{title}</span>
+        </li>
+    );
+}
+
 export interface ChatProps extends React.ComponentProps<'div'> {
     initialTodos?: string[]
     id?: string
@@ -37,10 +52,11 @@ export function Todo({ id, initialTodos, className }: ChatProps) {
     )
     // const todos = ['asd', 'def']
     return (
-        <>
+        <div className='p-4'>
+            <h1 className='text-lg font-semibold m-2'>Tasks</h1>
             <ol>
-                {todos && todos.map(todo => (<li key={todo}>{todo}</li>))}
+                {todos && todos.map(todo => <Task key={todo} title={todo} />)}
             </ol>
-        </>
+        </div>
     )
 }
