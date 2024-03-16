@@ -1,47 +1,36 @@
 import { Task } from './types';
 
-export enum EventType {
-    CreateTask,
-    DeleteTask,
-    ModifyTask,
-
-    UserMessage,
-}
+export type EventType = "create-task" | "delete-task" | "modify-task" | "message";
 
 export interface EventBase extends Record<string, any> {
     type: EventType
     creationUtcMillis: number
 }
-export enum TaskActionType {
-    Create,
-    Delete,
-    Modify
+
+export interface CreateTaskEvent extends EventBase {
+    type: "create-task"
+    task: Task
 }
-export interface CreateTask extends EventBase {
-    type: EventType.CreateTask
-    taskId: Task['id']
-}
+
 export interface DeleteTask extends EventBase {
-    type: EventType.DeleteTask
-    taskId: Task['id']
+    type: "delete-task"
+    task: Task
 }
 
 export interface ModifyTask extends EventBase {
-    type: EventType.ModifyTask
-    taskId: Task['id']
-    modification: Record<string, any>
+    type: "modify-task"
+    task: Task
+    previousValues: Record<string, any>
 }
 
-export enum MessageRole {
-    System,
-    User,
-    Assistant
-}
+export type MessageRole = "system" | "user" | "assistant"
 
 export interface MessageEvent extends EventBase {
-    type: EventType.UserMessage
+    type: "message"
     role: MessageRole
     content: string
 }
 
-export type Event = CreateTask | DeleteTask | ModifyTask | MessageEvent
+export type Event = CreateTaskEvent | DeleteTask | ModifyTask | MessageEvent
+
+export type DraftEvent<T> = T & { creationUtcMillis: -1 }

@@ -6,7 +6,7 @@ import { redirect } from 'next/navigation'
 
 import { auth } from '@/auth'
 import { NewTaskData, Task, TaskState, type Chat } from '@/lib/types'
-import { Event } from '@/lib/event-types'
+import { CreateTaskEvent, DraftEvent, Event, EventType } from '@/lib/event-types'
 import { Message } from 'ai'
 
 export async function getChats(userId?: string | null) {
@@ -41,28 +41,42 @@ async function getUserId(): Promise<UserId> {
 const getTaskListKey = (userId: UserId) => `user:tasklist:${userId}:default`
 const getTaskKey = (taskId: Event['id']) => `task:${taskId}`
 
+type KVPipeline = ReturnType<typeof kv.multi>
+
 export async function addTask(taskData: NewTaskData) {
   const userId = await getUserId()
 
-  const taskListKey = getTaskListKey(userId);
-  const taskKey = getTaskKey(crypto.randomUUID());
-  const newTask: Task = {
+  const taskListKey = getTaskListKey(userId)
+  const taskKey = getTaskKey(crypto.randomUUID())
+  const task: Task = {
     id: taskKey,
     title: taskData.title,
     state: TaskState.PENDING,
     priority: taskData.priority as number
-  };
+  }
 
   const transaction = kv.multi()
-  console.log(`User '${userId}' Creating new task '${JSON.stringify(newTask)}'`)
-  transaction.hset(taskKey, newTask)
+  console.log(`User '${userId}' Creating new task '${JSON.stringify(task)}'`)
+  transaction.hset(taskKey, task)
   console.log(`User '${userId}' adding task '${taskKey}' to list ${taskListKey}`)
-  transaction.zadd(taskListKey, { score: newTask.priority, member: taskKey })
-  const [createTaskResult, addToListResult] = await transaction.exec()
-  if (createTaskResult != 0) { throw new Error(`Failed to create task`) }
-  if (addToListResult != 0) { throw new Error(`Failed to add task to list`) }
+  transaction.zadd(taskListKey, { score: task.priority, member: taskKey })
+
+  const event: DraftEvent<CreateTaskEvent> = {
+    type: "create-task",
+    creationUtcMillis: -1,
+    task
+  }
+  const resultHandler = await addEventToPipeline(event, transaction)
+
+  const [createTaskResult, addToListResult, addEventResult]: [number | null, number | null, number | null]
+    = await transaction.exec()
+
+  if (createTaskResult == 0) { throw new Error(`Failed to create task`) }
+  if (addToListResult == 0) { throw new Error(`Failed to add task to list`) }
+  resultHandler(addEventResult)
+
   revalidatePath("/")
-  return newTask
+  return task
 }
 
 export async function getTasks(): Promise<Task[]> {
@@ -108,17 +122,32 @@ export async function deleteTask(taskId: string) {
 
 const getFeedKey = (userId: string) => `user:feed:${userId}:default`
 
-export async function addEvent<T extends Event>(eventData: Omit<T, "creationUtcMillis">) {
+export async function addEvent(eventData: DraftEvent<Event>) {
+  const pipeline = kv.pipeline()
+  const handleResult = await addEventToPipeline(eventData, pipeline)
+  const [result]: [number | null] = await pipeline.exec()
+  return handleResult(result)
+}
+
+export async function addEventToPipeline(
+  eventData: DraftEvent<Event>,
+  pipeline: KVPipeline
+): Promise<(result: number | null) => Event> {
   const userId = await getUserId()
 
-  const feedKey = getFeedKey(userId);
-  const event = { ...eventData, creationUtcMillis: Date.now() } as T;
+  const feedKey = getFeedKey(userId)
+  const event = { ...eventData, creationUtcMillis: Date.now() } as Event;
 
   console.log(`User '${userId}' adding event '${JSON.stringify(event)}' to list ${feedKey}`)
-  const result = await kv.zadd(feedKey, { score: event.timestamp, member: JSON.stringify(event) })
-  if (!result) { throw new Error("Failed to add event to feed") }
-  revalidatePath("/")
-  return event
+  const scoreMember = { score: event.creationUtcMillis, member: JSON.stringify(event) }
+  const handleResult = (result: number | null) => {
+    if (!result) { throw new Error("Failed to add event to feed") }
+    revalidatePath("/")
+    return event
+  }
+
+  pipeline.zadd(feedKey, scoreMember)
+  return handleResult
 }
 
 export async function getFeed(startIndex: number = 0, endIndex: number = 100): Promise<Event[]> {
@@ -126,14 +155,14 @@ export async function getFeed(startIndex: number = 0, endIndex: number = 100): P
 
   const feedKey = getFeedKey(userId)
   console.log(`User '${userId}' fetching feed '${feedKey}'`);
-  const eventJsons: string[] = await kv.zrange(feedKey, startIndex, endIndex, { rev: true })
+  const eventJsons: Event[] = await kv.zrange(feedKey, startIndex, endIndex, { rev: true })
 
   console.log(`User '${userId}' found ${eventJsons.length} events in feed '${feedKey}'`)
   if (eventJsons.length == 0) {
     return [];
   }
 
-  const events: Event[] = eventJsons.filter(json => json).map(json => JSON.parse(json));
+  const events: Event[] = eventJsons.filter(json => json);
   console.log(`User '${userId}' parsed ${events.length} events from feed '${feedKey}'`)
 
   return events

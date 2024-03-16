@@ -15,7 +15,7 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog'
-import { EventType, MessageEvent, MessageRole } from '@/lib/event-types'
+import { DraftEvent, Event, EventType, MessageEvent, MessageRole } from '@/lib/event-types'
 import { useLocalStorage } from '@/lib/hooks/use-local-storage'
 import { cn } from '@/lib/utils'
 import { ChatRequestOptions, CreateMessage } from 'ai'
@@ -29,9 +29,11 @@ const IS_PREVIEW = process.env.VERCEL_ENV === 'preview'
 export interface ChatProps extends React.ComponentProps<'div'> {
   initialMessages?: Message[]
   id?: string
+  events: Event[]
+  eventsError?: string
 }
 
-export function Chat({ id, initialMessages, className }: ChatProps) {
+export function Chat({ id, initialMessages, className, events, eventsError }: ChatProps) {
   const router = useRouter()
   const path = usePathname()
   const [previewToken, setPreviewToken] = useLocalStorage<string | null>(
@@ -60,23 +62,27 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
       }
     })
 
-  async function onAppend(message: Message | CreateMessage, chatRequestOptions: ChatRequestOptions | undefined) {
-    const messageEvent: MessageEvent = {
-      type: EventType.UserMessage,
-      role: MessageRole.User,
-      creationUtcMillis: message.createdAt?.getTime() ?? 0,
+  async function onAppend(message: CreateMessage, chatRequestOptions: ChatRequestOptions | undefined) {
+    const messageEvent: DraftEvent<MessageEvent> = {
+      type: 'message',
+      role: 'user',
+      creationUtcMillis: -1,
       content: message.content
     }
     await addEvent(messageEvent)
     return await append(message, chatRequestOptions)
   }
 
+  if (eventsError) {
+    toast.error(`Failed to fetch feed: ${JSON.stringify(eventsError)}`)
+  }
+
   return (
     <>
       <div className={cn('pb-[200px] pt-4 md:pt-4 grow', className)}>
-        {messages.length ? (
+        {messages.length + events.length ? (
           <>
-            <ChatList messages={messages} />
+            <ChatList events={events} />
             <ChatScrollAnchor trackVisibility={isLoading} />
           </>
         ) : (

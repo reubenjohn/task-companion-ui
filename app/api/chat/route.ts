@@ -4,7 +4,7 @@ import OpenAI from 'openai'
 
 import { addEvent } from '@/app/actions'
 import { auth } from '@/auth'
-import { EventType, MessageEvent, MessageRole } from '@/lib/event-types'
+import { DraftEvent, EventType, MessageEvent, MessageRole } from '@/lib/event-types'
 import { nanoid } from '@/lib/utils'
 
 export const runtime = 'edge'
@@ -37,34 +37,10 @@ export async function POST(req: Request) {
 
   const stream = OpenAIStream(res, {
     async onCompletion(completion) {
-      const title = json.messages[0].content.substring(0, 100)
-      const id = json.id ?? nanoid()
-      const createdAt = Date.now()
-      const path = `/chat/${id}`
-      const payload = {
-        id,
-        title,
-        userId,
-        createdAt,
-        path,
-        messages: [
-          ...messages,
-          {
-            content: completion,
-            role: 'assistant'
-          }
-        ]
-      }
-      await kv.hset(`chat:${id}`, payload)
-      await kv.zadd(`user:chat:${userId}`, {
-        score: createdAt,
-        member: `chat:${id}`
-      })
-
-      const messageEvent: MessageEvent = {
-        type: EventType.UserMessage,
-        role: MessageRole.User,
-        creationUtcMillis: createdAt ?? 0,
+      const messageEvent: DraftEvent<MessageEvent> = {
+        type: 'message',
+        role: 'system',
+        creationUtcMillis: -1,
         content: completion
       }
       await addEvent(messageEvent)

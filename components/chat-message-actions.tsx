@@ -6,13 +6,14 @@ import { Button } from '@/components/ui/button'
 import { IconCheck, IconCopy } from '@/components/ui/icons'
 import { useCopyToClipboard } from '@/lib/hooks/use-copy-to-clipboard'
 import { cn } from '@/lib/utils'
+import { Event } from '@/lib/event-types'
 
 interface ChatMessageActionsProps extends React.ComponentProps<'div'> {
-  message: Message
+  event: Message | Event
 }
 
 export function ChatMessageActions({
-  message,
+  event,
   className,
   ...props
 }: ChatMessageActionsProps) {
@@ -20,7 +21,7 @@ export function ChatMessageActions({
 
   const onCopy = () => {
     if (isCopied) return
-    copyToClipboard(message.content)
+    copyToClipboard(event.content)
   }
 
   return (

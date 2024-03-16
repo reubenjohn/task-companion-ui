@@ -18,7 +18,7 @@ export function TaskCard({ task: { id, title, state } }: TaskProps) {
     return (
         <li className='flex rounded-lg border bg-background p-2 my-2'>
             <input type='checkbox' className='m-2' checked={state == TaskState.COMPLETED} />
-            <span className='flex grow input px-2' role='textbox' contentEditable
+            <span className='flex grow input px-2 focus:outline-0' role='textbox' contentEditable
                 style={{ overflow: 'hidden', textOverflow: 'ellipsis', alignItems: 'center' }}>{title}</span>
 
             <button onClick={onDeleteTask}
