@@ -1,18 +1,15 @@
 'use server'
 
-
 import { getTasks } from '@/app/actions'
-import { NewTaskBar } from './new-task-bar'
+import { NewTaskForm } from './new-task-form'
+import { NewTaskFormElements } from './new-task-form-elements'
 import { TaskCard } from './task-card'
 
-const IS_PREVIEW = process.env.VERCEL_ENV === 'preview'
 
 export interface TaskListProps extends React.ComponentProps<'div'> {
-    initialTodos?: string[]
-    id?: string
 }
 
-export async function TaskList({ id, initialTodos, className }: TaskListProps) {
+export async function TaskList({ }: TaskListProps) {
     const tasks = await getTasks();
 
     return (
@@ -22,7 +19,9 @@ export async function TaskList({ id, initialTodos, className }: TaskListProps) {
                 {tasks && tasks.map(task =>
                     <TaskCard key={task.id} task={task} />)}
             </ol>
-            <NewTaskBar></NewTaskBar>
+            <NewTaskForm>
+                <NewTaskFormElements />
+            </NewTaskForm>
         </div>
     )
 }

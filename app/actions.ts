@@ -68,7 +68,7 @@ export async function getTasks(): Promise<Task[]> {
       pipeline.hgetall(taskId)
     }
     const results = (await pipeline.exec()).filter(task => task) as Task[]
-    console.log(`User '${userId}' fetched ${results.length} tasks from tasklist ${taskListId}: ${JSON.stringify(results)}`)
+    console.log(`User '${userId}' fetched ${results.length} tasks from tasklist ${taskListId}`)
 
     return results
   } catch (error) {
