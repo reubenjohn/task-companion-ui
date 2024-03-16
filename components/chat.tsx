@@ -2,12 +2,11 @@
 
 import { useChat, type Message } from 'ai/react'
 
-import { cn } from '@/lib/utils'
+import { addEvent } from '@/app/actions'
 import { ChatList } from '@/components/chat-list'
 import { ChatPanel } from '@/components/chat-panel'
-import { EmptyScreen } from '@/components/empty-screen'
 import { ChatScrollAnchor } from '@/components/chat-scroll-anchor'
-import { useLocalStorage } from '@/lib/hooks/use-local-storage'
+import { EmptyScreen } from '@/components/empty-screen'
 import {
   Dialog,
   DialogContent,
@@ -16,11 +15,15 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog'
+import { EventType, MessageEvent, MessageRole } from '@/lib/event-types'
+import { useLocalStorage } from '@/lib/hooks/use-local-storage'
+import { cn } from '@/lib/utils'
+import { ChatRequestOptions, CreateMessage } from 'ai'
+import { usePathname, useRouter } from 'next/navigation'
 import { useState } from 'react'
+import { toast } from 'react-hot-toast'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
-import { toast } from 'react-hot-toast'
-import { usePathname, useRouter } from 'next/navigation'
 
 const IS_PREVIEW = process.env.VERCEL_ENV === 'preview'
 export interface ChatProps extends React.ComponentProps<'div'> {
@@ -51,11 +54,23 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
         }
       },
       onFinish() {
-        if (!path.includes('chat')) {
-          window.history.pushState({}, '', `/chat/${id}`)
-        }
+        // if (!path.includes('chat')) {
+        //   window.history.pushState({}, '', `/chat/${id}`)
+        // }
       }
     })
+
+  async function onAppend(message: Message | CreateMessage, chatRequestOptions: ChatRequestOptions | undefined) {
+    const messageEvent: MessageEvent = {
+      type: EventType.UserMessage,
+      role: MessageRole.User,
+      creationUtcMillis: message.createdAt?.getTime() ?? 0,
+      content: message.content
+    }
+    await addEvent(messageEvent)
+    return await append(message, chatRequestOptions)
+  }
+
   return (
     <>
       <div className={cn('pb-[200px] pt-4 md:pt-4 grow', className)}>
@@ -72,7 +87,7 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
         id={id}
         isLoading={isLoading}
         stop={stop}
-        append={append}
+        append={onAppend}
         reload={reload}
         messages={messages}
         input={input}

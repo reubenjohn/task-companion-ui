@@ -2,7 +2,9 @@ import { kv } from '@vercel/kv'
 import { OpenAIStream, StreamingTextResponse } from 'ai'
 import OpenAI from 'openai'
 
+import { addEvent } from '@/app/actions'
 import { auth } from '@/auth'
+import { EventType, MessageEvent, MessageRole } from '@/lib/event-types'
 import { nanoid } from '@/lib/utils'
 
 export const runtime = 'edge'
@@ -53,11 +55,19 @@ export async function POST(req: Request) {
           }
         ]
       }
-      await kv.hmset(`chat:${id}`, payload)
+      await kv.hset(`chat:${id}`, payload)
       await kv.zadd(`user:chat:${userId}`, {
         score: createdAt,
         member: `chat:${id}`
       })
+
+      const messageEvent: MessageEvent = {
+        type: EventType.UserMessage,
+        role: MessageRole.User,
+        creationUtcMillis: createdAt ?? 0,
+        content: completion
+      }
+      await addEvent(messageEvent)
     }
   })
 
