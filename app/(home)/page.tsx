@@ -1,5 +1,5 @@
 import { Chat } from '@/components/chat';
-import { Todo } from '@/components/todo/todo';
+import { TaskList } from '@/components/task/task-list';
 import { nanoid } from '@/lib/utils';
 
 export default function IndexPage() {
@@ -7,7 +7,7 @@ export default function IndexPage() {
 
   return (<div className='flex flex-row size-full'>
     <div className='flex flex-col grow border w-1/2'>
-      <Todo id={id} />
+      <TaskList id={id} />
     </div>
     <div className='flex flex-col grow border w-1/2'>
       <Chat id={id} />
