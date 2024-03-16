@@ -3,10 +3,10 @@
 import { useChat, type Message } from 'ai/react'
 
 import { addEvent } from '@/app/actions'
-import { ChatList } from '@/components/chat-list'
-import { ChatPanel } from '@/components/chat-panel'
-import { ChatScrollAnchor } from '@/components/chat-scroll-anchor'
+import { EventPanel } from '@/components/event/event-panel'
+import { EventScrollAnchor } from '@/components/event/event-scroll-anchor'
 import { EmptyScreen } from '@/components/empty-screen'
+import { EventList } from '@/components/event/event-list'
 import {
   Dialog,
   DialogContent,
@@ -15,15 +15,15 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog'
-import { DraftEvent, Event, EventType, MessageEvent, MessageRole } from '@/lib/event-types'
+import { DraftEvent, Event, MessageEvent } from '@/lib/event-types'
 import { useLocalStorage } from '@/lib/hooks/use-local-storage'
 import { cn } from '@/lib/utils'
 import { ChatRequestOptions, CreateMessage } from 'ai'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { toast } from 'react-hot-toast'
-import { Button } from './ui/button'
-import { Input } from './ui/input'
+import { Button } from '../ui/button'
+import { Input } from '../ui/input'
 
 const IS_PREVIEW = process.env.VERCEL_ENV === 'preview'
 export interface ChatProps extends React.ComponentProps<'div'> {
@@ -33,7 +33,7 @@ export interface ChatProps extends React.ComponentProps<'div'> {
   eventsError?: string
 }
 
-export function Chat({ id, initialMessages, className, events, eventsError }: ChatProps) {
+export function EventWindow({ id, initialMessages, className, events, eventsError }: ChatProps) {
   const router = useRouter()
   const path = usePathname()
   const [previewToken, setPreviewToken] = useLocalStorage<string | null>(
@@ -82,14 +82,14 @@ export function Chat({ id, initialMessages, className, events, eventsError }: Ch
       <div className={cn('pb-[200px] pt-4 md:pt-4 grow', className)}>
         {messages.length + events.length ? (
           <>
-            <ChatList events={events} />
-            <ChatScrollAnchor trackVisibility={isLoading} />
+            <EventList events={events} />
+            <EventScrollAnchor trackVisibility={isLoading} />
           </>
         ) : (
           <EmptyScreen setInput={setInput} />
         )}
       </div>
-      <ChatPanel
+      <EventPanel
         id={id}
         isLoading={isLoading}
         stop={stop}

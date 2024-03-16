@@ -24,7 +24,7 @@ export interface ChatPanelProps
   title?: string
 }
 
-export function ChatPanel({
+export function EventPanel({
   id,
   title,
   isLoading,

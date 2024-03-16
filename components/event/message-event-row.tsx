@@ -11,11 +11,11 @@ import { IconOpenAI, IconUser } from '@/components/ui/icons'
 import { MessageEvent, MessageRole } from '@/lib/event-types'
 import { cn } from '@/lib/utils'
 
-export interface ChatMessageProps {
+export interface MessageEventRowProps {
   event: MessageEvent
 }
 
-export function ChatMessage({ event, ...props }: ChatMessageProps) {
+export function MessageEventRow({ event, ...props }: MessageEventRowProps) {
   return (
     <div
       className={cn('group relative mb-4 flex items-start')}

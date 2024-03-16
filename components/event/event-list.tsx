@@ -1,8 +1,7 @@
-import { type Message } from 'ai'
 
-import { ChatMessage } from '@/components/chat-message'
 import { Separator } from '@/components/ui/separator'
-import { Event, EventType } from '@/lib/event-types'
+import { Event } from '@/lib/event-types'
+import { MessageEventRow } from './message-event-row'
 
 export interface EventRowProps {
   event: Event
@@ -11,7 +10,7 @@ export interface EventRowProps {
 export function EventRow({ event }: EventRowProps) {
   switch (event.type) {
     case 'message':
-      return <ChatMessage event={event} />
+      return <MessageEventRow event={event} />
     default:
       return JSON.stringify(event)
   }
@@ -21,7 +20,7 @@ export interface ChatListProps {
   events: Event[]
 }
 
-export function ChatList({ events }: ChatListProps) {
+export function EventList({ events }: ChatListProps) {
   if (!events.length) {
     return null
   }
