@@ -76,6 +76,25 @@ export async function getTasks(): Promise<Task[]> {
   }
 }
 
+export async function deleteTask(taskId: string): Promise<boolean> {
+  const userId = (await auth())?.user.id;
+
+  try {
+    const taskListId = `user:tasklist:${userId}:default`;
+    console.log(`User '${userId}' deleting task '${taskId}' from tasklist '${taskListId}'`);
+
+    const transaction = kv.multi()
+    transaction.zrem(taskListId, taskId)
+    transaction.del(taskId)
+    const results = await transaction.exec<[number, number]>()
+    console.log(`User '${userId}' deleted task ${taskId} with result: ${results}`)
+    revalidatePath("/")
+    return (results[0] + results[1]) >= 2
+  } catch (error) {
+    return false
+  }
+}
+
 export async function getChat(id: string, userId: string) {
   const chat = await kv.hgetall<Chat>(`chat:${id}`)
 
