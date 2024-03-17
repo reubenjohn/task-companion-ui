@@ -1,6 +1,5 @@
 import { CreateTaskEvent, DeleteTask } from '@/lib/event-types';
-import { TaskState } from '@/lib/types';
-import { IconTrash } from '../ui/icons';
+import { IconListBullet, IconTrash } from '../ui/icons';
 
 export interface TaskEventRowProps {
   event: CreateTaskEvent | DeleteTask
@@ -12,8 +11,8 @@ export function TaskEventRow({ event: { type, creationUtcMillis, task: { title, 
     <div>
       <div className='flex flex-row'>
         <div>
-          <div className='border rounded-lg p-2 bg-muted-background' style={{ color: 'red' }}>
-            {type == 'create-task' ? '📜' : <IconTrash />}
+          <div className='border rounded-lg p-2 bg-muted-background'>
+            {type == 'create-task' ? <IconListBullet /> : <IconTrash style={{ color: 'red' }} />}
           </div>
         </div>
         <div className='flex flex-col w-full mx-2'>
