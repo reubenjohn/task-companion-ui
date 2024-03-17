@@ -79,7 +79,7 @@ export function EventWindow({ id, initialMessages, className, events, eventsErro
 
   return (
     <>
-      <div className={cn('pb-[200px] pt-4 md:pt-4 grow', className)}>
+      <div className={cn('pt-4 md:pt-4 grow', className)}>
         {messages.length + events.length ? (
           <>
             <EventList events={events} />

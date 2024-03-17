@@ -6,7 +6,7 @@ import { redirect } from 'next/navigation'
 
 import { auth } from '@/auth'
 import { NewTaskData, Task, TaskState, type Chat } from '@/lib/types'
-import { CreateTaskEvent, DraftEvent, Event, EventType } from '@/lib/event-types'
+import { CreateTaskEvent, DeleteTask, DraftEvent, Event, EventType } from '@/lib/event-types'
 import { Message } from 'ai'
 
 export async function getChats(userId?: string | null) {
@@ -103,8 +103,9 @@ export async function getTasks(): Promise<Task[]> {
   }
 }
 
-export async function deleteTask(taskId: string) {
+export async function deleteTask(task: Task) {
   const userId = await getUserId()
+  const taskId = task.id;
 
   const taskListKey = getTaskListKey(userId)
   console.log(`User '${userId}' deleting task '${taskId}' from tasklist '${taskListKey}'`);
@@ -112,11 +113,19 @@ export async function deleteTask(taskId: string) {
   const transaction = kv.multi()
   transaction.zrem(taskListKey, taskId)
   transaction.del(taskId)
-  const [removeFromTaskListResult, deleteTaskResult] = await transaction.exec<[number, number]>()
+  const event: DraftEvent<DeleteTask> = {
+    type: 'delete-task',
+    creationUtcMillis: -1,
+    task,
+  };
+  const resultHandler = await addEventToPipeline(event, transaction)
+  const [removeFromTaskListResult, deleteTaskResult, addEventResult] =
+    await transaction.exec<[number, number, number | null]>()
   console.log(`User '${userId}' deleted task ${taskId} with 
     remFromTaskListResult=${removeFromTaskListResult}, delTaskResult=${deleteTaskResult}`)
-  if (removeFromTaskListResult != 0) { throw new Error("Failed to remove task from list") }
-  if (deleteTaskResult != 0) { throw new Error("Failed to delete task") }
+  if (removeFromTaskListResult == 0) { throw new Error("Failed to remove task from list") }
+  if (deleteTaskResult == 0) { throw new Error("Failed to delete task") }
+  resultHandler(addEventResult)
   revalidatePath("/")
 }
 

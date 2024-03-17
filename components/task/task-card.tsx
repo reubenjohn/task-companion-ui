@@ -10,16 +10,16 @@ export interface TaskProps extends React.ComponentProps<'div'> {
     task: Task
 }
 
-export function TaskCard({ task: { id, title, state } }: TaskProps) {
+export function TaskCard({ task }: TaskProps) {
     async function onDeleteTask(e: React.MouseEvent<HTMLButtonElement>) {
         e.preventDefault()
-        await deleteTask(id)
+        await deleteTask(task)
     }
     return (
         <li className='flex rounded-lg border shadow bg-background p-2 my-2'>
-            <input type='checkbox' className='m-2' checked={state == TaskState.COMPLETED} />
+            <input type='checkbox' className='m-2' checked={task.state == TaskState.COMPLETED} />
             <span className='flex grow input px-2 focus:outline-0' role='textbox' contentEditable
-                style={{ overflow: 'hidden', textOverflow: 'ellipsis', alignItems: 'center' }}>{title}</span>
+                style={{ overflow: 'hidden', textOverflow: 'ellipsis', alignItems: 'center' }}>{task.title}</span>
 
             <button onClick={onDeleteTask}
                 className={`${cn(buttonVariants({ variant: 'outline', size: 'icon' }))} left-0 top-4 rounded-full bg-background p-0 sm:left-4`}

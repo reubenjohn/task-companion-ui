@@ -13,6 +13,7 @@ export function EventRow({ event }: EventRowProps) {
     case 'message':
       return <MessageEventRow event={event} />
     case 'create-task':
+    case 'delete-task':
       return <TaskEventRow event={event} />
     default:
       return JSON.stringify(event)
