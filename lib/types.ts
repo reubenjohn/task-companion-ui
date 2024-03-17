@@ -1,16 +1,14 @@
 import { type Message } from 'ai'
 
-export enum TaskState {
-  PENDING,
-  COMPLETED
-}
+export type TaskState = 'pending' | 'completed'
 
 export enum TaskPriority {
   Unknown,
   Critical,
   High,
   Medium,
-  Low
+  Low,
+  Obsolete = 99
 }
 
 export interface NewTaskData extends Record<string, any> {

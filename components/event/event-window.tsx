@@ -2,12 +2,11 @@
 
 import { useChat, type Message } from 'ai/react'
 
-import { cn } from '@/lib/utils'
-import { ChatList } from '@/components/chat-list'
-import { ChatPanel } from '@/components/chat-panel'
+import { addEvent } from '@/app/actions'
+import { EventPanel } from '@/components/event/event-panel'
+import { EventScrollAnchor } from '@/components/event/event-scroll-anchor'
 import { EmptyScreen } from '@/components/empty-screen'
-import { ChatScrollAnchor } from '@/components/chat-scroll-anchor'
-import { useLocalStorage } from '@/lib/hooks/use-local-storage'
+import { EventList } from '@/components/event/event-list'
 import {
   Dialog,
   DialogContent,
@@ -16,19 +15,25 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog'
-import { useState } from 'react'
-import { Button } from './ui/button'
-import { Input } from './ui/input'
-import { toast } from 'react-hot-toast'
+import { DraftEvent, Event, MessageEvent } from '@/lib/event-types'
+import { useLocalStorage } from '@/lib/hooks/use-local-storage'
+import { cn } from '@/lib/utils'
+import { ChatRequestOptions, CreateMessage } from 'ai'
 import { usePathname, useRouter } from 'next/navigation'
+import { useState } from 'react'
+import { toast } from 'react-hot-toast'
+import { Button } from '../ui/button'
+import { Input } from '../ui/input'
 
 const IS_PREVIEW = process.env.VERCEL_ENV === 'preview'
 export interface ChatProps extends React.ComponentProps<'div'> {
   initialMessages?: Message[]
   id?: string
+  events: Event[]
+  eventsError?: string
 }
 
-export function Chat({ id, initialMessages, className }: ChatProps) {
+export function EventWindow({ id, initialMessages, className, events, eventsError }: ChatProps) {
   const router = useRouter()
   const path = usePathname()
   const [previewToken, setPreviewToken] = useLocalStorage<string | null>(
@@ -51,28 +56,44 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
         }
       },
       onFinish() {
-        if (!path.includes('chat')) {
-          window.history.pushState({}, '', `/chat/${id}`)
-        }
+        // if (!path.includes('chat')) {
+        //   window.history.pushState({}, '', `/chat/${id}`)
+        // }
       }
     })
+
+  async function onAppend(message: CreateMessage, chatRequestOptions: ChatRequestOptions | undefined) {
+    const messageEvent: DraftEvent<MessageEvent> = {
+      type: 'message',
+      role: 'user',
+      creationUtcMillis: -1,
+      content: message.content
+    }
+    await addEvent(messageEvent)
+    return await append(message, chatRequestOptions)
+  }
+
+  if (eventsError) {
+    toast.error(`Failed to fetch feed: ${JSON.stringify(eventsError)}`)
+  }
+
   return (
     <>
-      <div className={cn('pb-[200px] pt-4 md:pt-4 grow', className)}>
-        {messages.length ? (
+      <div className={cn('pt-4 md:pt-4 grow overflow-auto', className)}>
+        {messages.length + events.length ? (
           <>
-            <ChatList messages={messages} />
-            <ChatScrollAnchor trackVisibility={isLoading} />
+            <EventList events={events} />
+            <EventScrollAnchor trackVisibility={isLoading} />
           </>
         ) : (
           <EmptyScreen setInput={setInput} />
         )}
       </div>
-      <ChatPanel
+      <EventPanel
         id={id}
         isLoading={isLoading}
         stop={stop}
-        append={append}
+        append={onAppend}
         reload={reload}
         messages={messages}
         input={input}
