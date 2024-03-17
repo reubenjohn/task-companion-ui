@@ -28,7 +28,7 @@ export function TaskEventUpdateRow({ event: { type, creationUtcMillis, task: { t
           </p>
 
           <div className='flex grow w-full rounded-lg border shadow-sm background bg-background p-2 mt-1'>
-            <input type='checkbox' className='m-2' checked={state == TaskState.COMPLETED} />
+            <input type='checkbox' className='m-2' checked={state == 'completed'} />
             <span className='flex grow input px-2 focus:outline-0' role='textbox' contentEditable
               style={{ overflow: 'hidden', textOverflow: 'ellipsis', alignItems: 'center' }}>{title}</span>
           </div>

@@ -17,11 +17,11 @@ export function TaskCard({ task }: TaskProps) {
     }
     async function onToggleTask(e: React.ChangeEvent<HTMLInputElement>) {
         e.preventDefault()
-        toggleTask(task, e.target.value ? TaskState.COMPLETED : TaskState.PENDING)
+        toggleTask(task, e.target.checked ? 'completed' : 'pending')
     }
     return (
         <li className='flex rounded-lg border shadow bg-background p-2 my-2'>
-            <input type='checkbox' className='m-2' onChange={onToggleTask} checked={task.state == TaskState.COMPLETED} />
+            <input type='checkbox' className='m-2' onChange={onToggleTask} checked={task.state == 'completed'} />
             <span className='flex grow input px-2 focus:outline-0' role='textbox' contentEditable
                 style={{ overflow: 'hidden', textOverflow: 'ellipsis', alignItems: 'center' }}>{task.title}</span>
 

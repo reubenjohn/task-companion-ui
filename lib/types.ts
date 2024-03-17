@@ -1,9 +1,6 @@
 import { type Message } from 'ai'
 
-export enum TaskState {
-  PENDING,
-  COMPLETED
-}
+export type TaskState = 'pending' | 'completed'
 
 export enum TaskPriority {
   Unknown,

@@ -51,7 +51,7 @@ export async function addTask(taskData: NewTaskData) {
   const task: Task = {
     id: taskKey,
     title: taskData.title,
-    state: TaskState.PENDING,
+    state: 'pending',
     priority: taskData.priority as number
   }
 
@@ -71,7 +71,7 @@ export async function addTask(taskData: NewTaskData) {
   const [createTaskResult, addToListResult, addEventResult]: [number | null, number | null, number | null]
     = await transaction.exec()
 
-  if (createTaskResult != 1) { throw new Error(`Failed to create task`) }
+  if (createTaskResult == 0) { throw new Error(`Failed to create task`) }
   if (addToListResult != 1) { throw new Error(`Failed to add task to list`) }
   resultHandler(addEventResult)
 
@@ -130,7 +130,7 @@ export async function deleteTask(task: Task) {
 }
 
 export async function toggleTask(taskData: Task, newState: TaskState) {
-  if (taskData.state == newState) { return null }
+  if (taskData.state == newState) { throw new Error(`Task is already in ${newState} state`) }
 
   const userId = await getUserId()
 
@@ -147,8 +147,6 @@ export async function toggleTask(taskData: Task, newState: TaskState) {
   const transaction = kv.multi()
   console.log(`User '${userId}' modifying task '${JSON.stringify(task)}'`)
   transaction.hset(taskKey, task)
-  console.log(`User '${userId}' adding task '${taskKey}' to list ${taskListKey}`)
-  transaction.zadd(taskListKey, { score: 99, member: taskKey })
 
   const event: DraftEvent<UpdateTask> = {
     type: "update-task",
@@ -158,11 +156,10 @@ export async function toggleTask(taskData: Task, newState: TaskState) {
   }
   const resultHandler = await addEventToPipeline(event, transaction)
 
-  const [updateTaskResult, taskListResult, addEventResult]: [number | null, number | null, number | null]
+  const [nAddedFields, addEventResult]: [number | null, number | null, number | null]
     = await transaction.exec()
 
-  if (updateTaskResult == 0) { throw new Error(`Failed to update task (result '${JSON.stringify(updateTaskResult)}')`) }
-  if (taskListResult != 1) { throw new Error(`Task '${JSON.stringify(taskData)}' not found (result '${JSON.stringify(taskListResult)}')`) }
+  if (nAddedFields && nAddedFields > 0) { throw new Error(`Unexpectedly added new fields to task`) }
   resultHandler(addEventResult)
 
   revalidatePath("/")
