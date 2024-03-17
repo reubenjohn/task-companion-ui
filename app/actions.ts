@@ -1,11 +1,11 @@
 'use server'
 
+import { kv } from '@vercel/kv'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-import { kv } from '@vercel/kv'
 
 import { auth } from '@/auth'
-import { type Chat } from '@/lib/types'
+import { NewTaskData, Task, TaskState, type Chat } from '@/lib/types'
 
 export async function getChats(userId?: string | null) {
   if (!userId) {
@@ -14,9 +14,7 @@ export async function getChats(userId?: string | null) {
 
   try {
     const pipeline = kv.pipeline()
-    const chats: string[] = await kv.zrange(`user:chat:${userId}`, 0, -1, {
-      rev: true
-    })
+    const chats: string[] = await kv.zrange(`user:chat:${userId}`, 0, -1, { rev: true })
 
     for (const chat of chats) {
       pipeline.hgetall(chat)
@@ -27,6 +25,73 @@ export async function getChats(userId?: string | null) {
     return results as Chat[]
   } catch (error) {
     return []
+  }
+}
+
+export async function createNewTask(taskData: NewTaskData) {
+  const userId = (await auth())?.user.id
+
+  const taskListId = `user:tasklist:${userId}:default`;
+  const taskId = `task:${crypto.randomUUID()}`;
+  const newTask: Task = {
+    id: taskId,
+    title: taskData.title,
+    state: TaskState.PENDING,
+    priority: taskData.priority as number
+  };
+
+  const transaction = kv.multi()
+  console.log(`User '${userId}' Creating new task '${JSON.stringify(newTask)}'`)
+  transaction.hset(taskId, newTask)
+  console.log(`User '${userId}' adding task '${taskId}' to list ${taskListId}`)
+  transaction.zadd(taskListId, { score: newTask.priority, member: taskId })
+  const results = await transaction.exec()
+  revalidatePath("/")
+  return newTask
+}
+
+export async function getTasks(): Promise<Task[]> {
+  const userId = (await auth())?.user.id;
+
+  try {
+    const taskListId = `user:tasklist:${userId}:default`;
+    console.log(`User '${userId}' fetching tasklist ${taskListId}`);
+    const taskIds: string[] = await kv.zrange(taskListId, 0, -1, { rev: true })
+
+    console.log(`User '${userId}' found ${taskIds.length} task IDs in tasklist ${taskListId}`)
+    if (taskIds.length == 0) {
+      return [];
+    }
+
+    const pipeline = kv.pipeline()
+    for (const taskId of taskIds) {
+      pipeline.hgetall(taskId)
+    }
+    const results = (await pipeline.exec()).filter(task => task) as Task[]
+    console.log(`User '${userId}' fetched ${results.length} tasks from tasklist ${taskListId}`)
+
+    return results
+  } catch (error) {
+    return []
+  }
+}
+
+export async function deleteTask(taskId: string): Promise<boolean> {
+  const userId = (await auth())?.user.id;
+
+  try {
+    const taskListId = `user:tasklist:${userId}:default`;
+    console.log(`User '${userId}' deleting task '${taskId}' from tasklist '${taskListId}'`);
+
+    const transaction = kv.multi()
+    transaction.zrem(taskListId, taskId)
+    transaction.del(taskId)
+    const results = await transaction.exec<[number, number]>()
+    console.log(`User '${userId}' deleted task ${taskId} with result: ${results}`)
+    revalidatePath("/")
+    return (results[0] + results[1]) >= 2
+  } catch (error) {
+    return false
   }
 }
 
