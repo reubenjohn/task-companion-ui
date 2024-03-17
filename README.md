@@ -1,13 +1,13 @@
 # [Task Companion UI](https://task-companion.vercel.app/)
 ![AI Chat Screenshot](docs/ai-chat-screenshot.png)
 <p align="center">
-  Task Companion is an digital assistant that uses chat and visual interfaces to manage your to-do list and schedule, learning from your interactions to become more helpful over time.
+  Task Companion is a digital assistant that uses chat and visual interfaces to manage your to-do list and schedule, learning from your interactions to become more helpful over time.
 </p>
 
 <p align="center">
   <a href="#features"><strong>Features</strong></a> ·
-  <a href="#features"><strong>Roadmap</strong></a> ·
-  <a href="#features"><strong>Creating a Database</strong></a> ·
+  <a href="#roadmap"><strong>Roadmap</strong></a> ·
+  <a href="#deployment"><strong>Deployment</strong></a> ·
   <a href="#running-locally"><strong>Running locally</strong></a> ·
   <a href="#authors"><strong>Authors</strong></a>
 </p>
@@ -16,13 +16,12 @@
 ## Features
 
 - OpenAI `gpt-3.5-turbo` powered chat interface.
-- Chat History & rate limiting.
-- GitHub authentication with [NextAuth.js](https://github.com/nextauthjs/next-auth)
+- User interface to manage the to-do list (left-pane).
+- Dynamic event feed showcasing task activities, offering real-time to-do list updates and chats (right-pane).
+- GitHub authentication with [NextAuth.js](https://github.com/nextauthjs/next-auth) for secure access.
 
 ## Roadmap
 
-- User interface to manage the user's to-do list (left-pane).
-- A chat like activity feed of every interaction with the application (right-pane).
 - Ability for the LLM to answer questions about created tasks.
 - AI can ask questions and make suggestions about created or modified tasks.
 - AI creates tasks.
@@ -66,7 +65,7 @@ pnpm install
 pnpm dev
 ```
 
-Your app template should now be running on [localhost:3000](http://localhost:3000/).
+The local instance should now be running on [localhost:3000](http://localhost:3000/).
 
 ## Authors & Attribution
 
