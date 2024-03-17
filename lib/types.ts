@@ -10,7 +10,8 @@ export enum TaskPriority {
   Critical,
   High,
   Medium,
-  Low
+  Low,
+  Obsolete = 99
 }
 
 export interface NewTaskData extends Record<string, any> {

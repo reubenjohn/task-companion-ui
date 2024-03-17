@@ -1,6 +1,6 @@
 import { Task } from './types';
 
-export type EventType = "create-task" | "delete-task" | "modify-task" | "message";
+export type EventType = "create-task" | "delete-task" | "update-task" | "message";
 
 export interface EventBase extends Record<string, any> {
     type: EventType
@@ -17,8 +17,8 @@ export interface DeleteTask extends EventBase {
     task: Task
 }
 
-export interface ModifyTask extends EventBase {
-    type: "modify-task"
+export interface UpdateTask extends EventBase {
+    type: "update-task"
     task: Task
     previousValues: Record<string, any>
 }
@@ -31,6 +31,6 @@ export interface MessageEvent extends EventBase {
     content: string
 }
 
-export type Event = CreateTaskEvent | DeleteTask | ModifyTask | MessageEvent
+export type Event = CreateTaskEvent | DeleteTask | UpdateTask | MessageEvent
 
 export type DraftEvent<T> = T & { creationUtcMillis: -1 }

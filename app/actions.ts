@@ -5,8 +5,8 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
 import { auth } from '@/auth'
-import { NewTaskData, Task, TaskState, type Chat } from '@/lib/types'
-import { CreateTaskEvent, DeleteTask, DraftEvent, Event, EventType } from '@/lib/event-types'
+import { NewTaskData, Task, TaskState, type Chat, TaskPriority } from '@/lib/types'
+import { CreateTaskEvent, DeleteTask, DraftEvent, Event, EventType, UpdateTask as UpdateTask } from '@/lib/event-types'
 import { Message } from 'ai'
 
 export async function getChats(userId?: string | null) {
@@ -71,8 +71,8 @@ export async function addTask(taskData: NewTaskData) {
   const [createTaskResult, addToListResult, addEventResult]: [number | null, number | null, number | null]
     = await transaction.exec()
 
-  if (createTaskResult == 0) { throw new Error(`Failed to create task`) }
-  if (addToListResult == 0) { throw new Error(`Failed to add task to list`) }
+  if (createTaskResult != 1) { throw new Error(`Failed to create task`) }
+  if (addToListResult != 1) { throw new Error(`Failed to add task to list`) }
   resultHandler(addEventResult)
 
   revalidatePath("/")
@@ -123,10 +123,49 @@ export async function deleteTask(task: Task) {
     await transaction.exec<[number, number, number | null]>()
   console.log(`User '${userId}' deleted task ${taskId} with 
     remFromTaskListResult=${removeFromTaskListResult}, delTaskResult=${deleteTaskResult}`)
-  if (removeFromTaskListResult == 0) { throw new Error("Failed to remove task from list") }
-  if (deleteTaskResult == 0) { throw new Error("Failed to delete task") }
+  if (removeFromTaskListResult != 1) { throw new Error("Failed to remove task from list") }
+  if (deleteTaskResult != 1) { throw new Error("Failed to delete task") }
   resultHandler(addEventResult)
   revalidatePath("/")
+}
+
+export async function toggleTask(taskData: Task, newState: TaskState) {
+  if (taskData.state == newState) { return null }
+
+  const userId = await getUserId()
+
+  const taskListKey = getTaskListKey(userId)
+  const taskKey = getTaskKey(crypto.randomUUID())
+  const task: Task = {
+    id: taskKey,
+    title: taskData.title,
+    state: newState,
+    priority: taskData.priority
+  }
+
+  const transaction = kv.multi()
+  console.log(`User '${userId}' modifying task '${JSON.stringify(task)}'`)
+  transaction.hset(taskKey, task)
+  console.log(`User '${userId}' adding task '${taskKey}' to list ${taskListKey}`)
+  transaction.zadd(taskListKey, { score: 99, member: taskKey })
+
+  const event: DraftEvent<UpdateTask> = {
+    type: "update-task",
+    creationUtcMillis: -1,
+    task,
+    previousValues: { state: taskData.state }
+  }
+  const resultHandler = await addEventToPipeline(event, transaction)
+
+  const [updateTaskResult, taskListResult, addEventResult]: [number | null, number | null, number | null]
+    = await transaction.exec()
+
+  if (updateTaskResult != 1) { throw new Error(`Failed to create task`) }
+  if (taskListResult != 1) { throw new Error(`Task '${JSON.stringify(taskData)}' not found`) }
+  resultHandler(addEventResult)
+
+  revalidatePath("/")
+  return task
 }
 
 const getFeedKey = (userId: string) => `user:feed:${userId}:default`
@@ -150,7 +189,7 @@ export async function addEventToPipeline(
   console.log(`User '${userId}' adding event '${JSON.stringify(event)}' to list ${feedKey}`)
   const scoreMember = { score: event.creationUtcMillis, member: JSON.stringify(event) }
   const handleResult = (result: number | null) => {
-    if (!result) { throw new Error("Failed to add event to feed") }
+    if (result != 1) { throw new Error("Failed to add event to feed") }
     revalidatePath("/")
     return event
   }

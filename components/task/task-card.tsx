@@ -4,7 +4,7 @@ import { Task, TaskState } from '@/lib/types';
 import { buttonVariants } from '../ui/button';
 import { cn } from '@/lib/utils';
 import { IconTrash } from '../ui/icons';
-import { deleteTask } from '@/app/actions';
+import { deleteTask, toggleTask } from '@/app/actions';
 
 export interface TaskProps extends React.ComponentProps<'div'> {
     task: Task
@@ -15,9 +15,13 @@ export function TaskCard({ task }: TaskProps) {
         e.preventDefault()
         await deleteTask(task)
     }
+    async function onToggleTask(e: React.ChangeEvent<HTMLInputElement>) {
+        e.preventDefault()
+        toggleTask(task, e.target.value ? TaskState.COMPLETED : TaskState.PENDING)
+    }
     return (
         <li className='flex rounded-lg border shadow bg-background p-2 my-2'>
-            <input type='checkbox' className='m-2' checked={task.state == TaskState.COMPLETED} />
+            <input type='checkbox' className='m-2' onChange={onToggleTask} checked={task.state == TaskState.COMPLETED} />
             <span className='flex grow input px-2 focus:outline-0' role='textbox' contentEditable
                 style={{ overflow: 'hidden', textOverflow: 'ellipsis', alignItems: 'center' }}>{task.title}</span>
 
