@@ -85,7 +85,7 @@ export async function getTasks(): Promise<Task[]> {
   try {
     const taskListKey = getTaskListKey(userId);
     console.log(`User '${userId}' fetching tasklist ${taskListKey}`);
-    const taskKeys: string[] = await kv.zrange(taskListKey, 0, -1, { rev: true })
+    const taskKeys: string[] = await kv.zrange(taskListKey, TaskPriority.Unknown, TaskPriority.Obsolete, { byScore: true })
 
     console.log(`User '${userId}' found ${taskKeys.length} task IDs in tasklist ${taskListKey}`)
     if (taskKeys.length == 0) { return []; }
@@ -135,7 +135,8 @@ export async function toggleTask(taskData: Task, newState: TaskState) {
   const userId = await getUserId()
 
   const taskListKey = getTaskListKey(userId)
-  const taskKey = getTaskKey(crypto.randomUUID())
+  const taskKey = taskData.id
+
   const task: Task = {
     id: taskKey,
     title: taskData.title,
@@ -160,8 +161,8 @@ export async function toggleTask(taskData: Task, newState: TaskState) {
   const [updateTaskResult, taskListResult, addEventResult]: [number | null, number | null, number | null]
     = await transaction.exec()
 
-  if (updateTaskResult != 1) { throw new Error(`Failed to create task`) }
-  if (taskListResult != 1) { throw new Error(`Task '${JSON.stringify(taskData)}' not found`) }
+  if (updateTaskResult == 0) { throw new Error(`Failed to update task (result '${JSON.stringify(updateTaskResult)}')`) }
+  if (taskListResult != 1) { throw new Error(`Task '${JSON.stringify(taskData)}' not found (result '${JSON.stringify(taskListResult)}')`) }
   resultHandler(addEventResult)
 
   revalidatePath("/")
@@ -198,7 +199,7 @@ export async function addEventToPipeline(
   return handleResult
 }
 
-export async function getFeed(startIndex: number = 0, endIndex: number = 100): Promise<Event[]> {
+export async function getFeed(startIndex: number = 0, endIndex: number = 20): Promise<Event[]> {
   const userId = await getUserId()
 
   const feedKey = getFeedKey(userId)

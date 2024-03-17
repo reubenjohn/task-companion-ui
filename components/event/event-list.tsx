@@ -3,6 +3,7 @@ import { Separator } from '@/components/ui/separator'
 import { Event } from '@/lib/event-types'
 import { MessageEventRow } from './message-event-row'
 import { TaskEventRow } from './task-event-row'
+import { TaskEventUpdateRow } from './task-event-update-row'
 
 export interface EventRowProps {
   event: Event
@@ -15,6 +16,8 @@ export function EventRow({ event }: EventRowProps) {
     case 'create-task':
     case 'delete-task':
       return <TaskEventRow event={event} />
+    case 'update-task':
+      return <TaskEventUpdateRow event={event} />
     default:
       return JSON.stringify(event)
   }
@@ -30,15 +33,15 @@ export function EventList({ events }: ChatListProps) {
   }
 
   return (
-    <div className="relative mx-auto max-w-2xl px-4">
+    <ol className="relative mx-auto max-w-2xl px-4">
       {events.toReversed().map((event, index) => (
-        <div key={index}>
+        <li key={index}>
           <EventRow event={event} />
           {index < events.length - 1 && (
             <Separator className="my-2 md:my-4" />
           )}
-        </div>
+        </li>
       ))}
-    </div>
+    </ol>
   )
 }
