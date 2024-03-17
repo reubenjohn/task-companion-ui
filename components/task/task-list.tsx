@@ -22,21 +22,23 @@ export async function TaskList({ }: TaskListProps) {
             <NewTaskForm>
                 <NewTaskFormElements />
             </NewTaskForm>
-            {activeTasks.length > 0 && <>
-                <div className='w-full border mt-4 mb-8' />
-                <ol>
-                    {activeTasks.map(task =>
-                        <TaskCard key={task.id} task={task} />)}
-                </ol>
-            </>}
-            {completedTasks.length > 0 && <>
-                <div className='w-full border my-4' />
-                <h1 className='text-lg font-semibold m-2'>Completed Tasks</h1>
-                <ol>
-                    {completedTasks.map(task =>
-                        <TaskCard key={task.id} task={task} />)}
-                </ol>
-            </>}
+            <div className='overflow-auto'>
+                {activeTasks.length > 0 && <>
+                    <div className='border mt-2 mb-8' />
+                    <ol>
+                        {activeTasks.map(task =>
+                            <TaskCard key={task.id} task={task} />)}
+                    </ol>
+                </>}
+                {completedTasks.length > 0 && <>
+                    <div className='border my-4' />
+                    <h1 className='text-lg font-semibold m-2'>Completed Tasks</h1>
+                    <ol>
+                        {completedTasks.map(task =>
+                            <TaskCard key={task.id} task={task} />)}
+                    </ol>
+                </>}
+            </div>
         </div>
     )
 }

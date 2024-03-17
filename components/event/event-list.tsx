@@ -33,7 +33,7 @@ export function EventList({ events }: ChatListProps) {
   }
 
   return (
-    <ol className="relative mx-auto max-w-2xl px-4">
+    <ol className="relative mx-auto max-w-2xl overflow-auto px-4 mb-8">
       {events.toReversed().map((event, index) => (
         <li key={index}>
           <EventRow event={event} />
