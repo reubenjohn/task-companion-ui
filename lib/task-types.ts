@@ -16,7 +16,7 @@ export interface NewTaskData extends Record<string, any> {
 }
 
 export interface Task extends Record<string, any> {
-    id: string;
+    id: number;
     title: string;
     state: TaskState;
 }

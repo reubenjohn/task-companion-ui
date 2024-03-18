@@ -38,8 +38,7 @@ async function getUserId(): Promise<UserId> {
   return userId
 }
 
-const getTaskListKey = (userId: UserId) => `user:tasklist:${userId}:default`
-const getTaskKey = (taskId: Event['id']) => `task:${taskId}`
+const getTaskListKey = (userId: UserId, version: string = '') => `user:tasklist:${userId}:default${version}`
 
 type KVPipeline = ReturnType<typeof kv.multi>
 
@@ -47,7 +46,7 @@ export async function addTask(taskData: NewTaskData) {
   const userId = await getUserId()
 
   const taskListKey = getTaskListKey(userId)
-  const taskKey = getTaskKey(crypto.randomUUID())
+  const taskKey = new Date().getTime() + Math.random()
   const task: Task = {
     id: taskKey,
     title: taskData.title,
@@ -56,10 +55,8 @@ export async function addTask(taskData: NewTaskData) {
   }
 
   const transaction = kv.multi()
-  console.log(`User '${userId}' Creating new task '${JSON.stringify(task)}'`)
-  transaction.hset(taskKey, task)
-  console.log(`User '${userId}' adding task '${taskKey}' to list ${taskListKey}`)
-  transaction.zadd(taskListKey, { score: task.priority, member: taskKey })
+  console.log(`User '${userId}' adding task '${JSON.stringify(task)}' to list ${taskListKey}`)
+  transaction.zadd(taskListKey, { score: task.id, member: JSON.stringify(task) })
 
   const event: DraftEvent<CreateTaskEvent> = {
     type: "create-task",
@@ -68,11 +65,10 @@ export async function addTask(taskData: NewTaskData) {
   }
   const resultHandler = await addEventToPipeline(event, transaction)
 
-  const [createTaskResult, addToListResult, addEventResult]: [number | null, number | null, number | null]
+  const [createTaskResult, addEventResult]: [number | null, number | null]
     = await transaction.exec()
 
   if (createTaskResult == 0) { throw new Error(`Failed to create task`) }
-  if (addToListResult != 1) { throw new Error(`Failed to add task to list`) }
   resultHandler(addEventResult)
 
   revalidatePath("/")
@@ -85,17 +81,9 @@ export async function getTasks(): Promise<Task[]> {
   try {
     const taskListKey = getTaskListKey(userId);
     console.log(`User '${userId}' fetching tasklist ${taskListKey}`);
-    const taskKeys: string[] = await kv.zrange(taskListKey, TaskPriority.Unknown, TaskPriority.Obsolete, { byScore: true })
-
-    console.log(`User '${userId}' found ${taskKeys.length} task IDs in tasklist ${taskListKey}`)
-    if (taskKeys.length == 0) { return []; }
-
-    const pipeline = kv.pipeline()
-    for (const taskKey of taskKeys) {
-      pipeline.hgetall(taskKey)
-    }
-    const results = (await pipeline.exec()).filter(task => task) as Task[]
-    console.log(`User '${userId}' fetched ${results.length} tasks from tasklist ${taskListKey}`)
+    const tasks: Task[] = await kv.zrange(taskListKey, 0, 100)
+    const results = tasks.filter(task => task)
+    console.log(`User '${userId}' parsed ${results.length} tasks from tasklist ${taskListKey}`)
 
     return results
   } catch (error) {
@@ -111,19 +99,16 @@ export async function deleteTask(task: Task) {
   console.log(`User '${userId}' deleting task '${taskId}' from tasklist '${taskListKey}'`);
 
   const transaction = kv.multi()
-  transaction.zrem(taskListKey, taskId)
-  transaction.del(taskId)
+  transaction.zremrangebyscore(taskListKey, taskId, taskId)
   const event: DraftEvent<DeleteTask> = {
     type: 'delete-task',
     creationUtcMillis: -1,
     task,
   };
   const resultHandler = await addEventToPipeline(event, transaction)
-  const [removeFromTaskListResult, deleteTaskResult, addEventResult] =
-    await transaction.exec<[number, number, number | null]>()
-  console.log(`User '${userId}' deleted task ${taskId} with 
-    remFromTaskListResult=${removeFromTaskListResult}, delTaskResult=${deleteTaskResult}`)
-  if (removeFromTaskListResult != 1) { throw new Error("Failed to remove task from list") }
+  const [deleteTaskResult, addEventResult] =
+    await transaction.exec<[number, number | null]>()
+  console.log(`User '${userId}' deleted task ${taskId} with delTaskResult=${deleteTaskResult}`)
   if (deleteTaskResult != 1) { throw new Error("Failed to delete task") }
   resultHandler(addEventResult)
   revalidatePath("/")
@@ -135,10 +120,10 @@ export async function toggleTask(taskData: Task, newState: TaskState) {
   const userId = await getUserId()
 
   const taskListKey = getTaskListKey(userId)
-  const taskKey = taskData.id
+  const taskId = taskData.id
 
   const task: Task = {
-    id: taskKey,
+    id: taskId,
     title: taskData.title,
     state: newState,
     priority: taskData.priority
@@ -146,7 +131,8 @@ export async function toggleTask(taskData: Task, newState: TaskState) {
 
   const transaction = kv.multi()
   console.log(`User '${userId}' modifying task '${JSON.stringify(task)}'`)
-  transaction.hset(taskKey, task)
+  transaction.zremrangebyscore(taskListKey, taskId, taskId)
+  transaction.zadd(taskListKey, { score: taskId, member: JSON.stringify(task) })
 
   const event: DraftEvent<UpdateTask> = {
     type: "update-task",
@@ -156,10 +142,11 @@ export async function toggleTask(taskData: Task, newState: TaskState) {
   }
   const resultHandler = await addEventToPipeline(event, transaction)
 
-  const [nAddedFields, addEventResult]: [number | null, number | null, number | null]
+  const [removePreviousResult, addTaskResult, addEventResult]: [number | null, number | null, number | null]
     = await transaction.exec()
 
-  if (nAddedFields && nAddedFields > 0) { throw new Error(`Unexpectedly added new fields to task`) }
+  if (removePreviousResult != 1) { throw new Error(`Task did not exist`) }
+  if (addTaskResult != 1) { throw new Error(`Updated task was not created`) }
   resultHandler(addEventResult)
 
   revalidatePath("/")
@@ -202,12 +189,6 @@ export async function getFeed(startIndex: number = 0, endIndex: number = 20): Pr
   const feedKey = getFeedKey(userId)
   console.log(`User '${userId}' fetching feed '${feedKey}'`);
   const eventJsons: Event[] = await kv.zrange(feedKey, startIndex, endIndex, { rev: true })
-
-  console.log(`User '${userId}' found ${eventJsons.length} events in feed '${feedKey}'`)
-  if (eventJsons.length == 0) {
-    return [];
-  }
-
   const events: Event[] = eventJsons.filter(json => json);
   console.log(`User '${userId}' parsed ${events.length} events from feed '${feedKey}'`)
 
