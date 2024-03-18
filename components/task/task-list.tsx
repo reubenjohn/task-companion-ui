@@ -4,7 +4,6 @@ import { getTasks } from '@/app/actions'
 import { NewTaskForm } from './new-task-form'
 import { NewTaskFormElements } from './new-task-form-elements'
 import { TaskCard } from './task-card'
-import { TaskState } from '@/lib/types'
 
 
 export interface TaskListProps extends React.ComponentProps<'div'> {

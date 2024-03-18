@@ -5,9 +5,9 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
 import { auth } from '@/auth'
-import { NewTaskData, Task, TaskState, type Chat, TaskPriority } from '@/lib/types'
-import { CreateTaskEvent, DeleteTask, DraftEvent, Event, EventType, UpdateTask as UpdateTask } from '@/lib/event-types'
-import { Message } from 'ai'
+import { CreateTaskEvent, DeleteTask, DraftEvent, Event, UpdateTask } from '@/lib/event-types'
+import { NewTaskData, Task, TaskPriority, TaskState } from '@/lib/task-types'
+import { type Chat } from '@/lib/types'
 
 export async function getChats(userId?: string | null) {
   if (!userId) {

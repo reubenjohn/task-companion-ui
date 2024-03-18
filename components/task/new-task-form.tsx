@@ -1,7 +1,7 @@
 "use client"
 
 import { addTask } from "@/app/actions";
-import { TaskPriority } from "@/lib/types";
+import { TaskPriority } from '@/lib/task-types';
 import toast from "react-hot-toast";
 
 export interface NewTaskBarProps extends React.ComponentProps<'div'> {
