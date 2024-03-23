@@ -15,7 +15,7 @@ export function NewTaskForm({ children }: NewTaskBarProps) {
             toast.error("Cannot create a task without a title")
             return
         }
-        await addTask({ title, priority: TaskPriority.Unknown })
+        await addTask({ title, priority: TaskPriority.unknown })
     }
     return (
         <form action={onCreateTask} className='flex row my-2 justify-center'>

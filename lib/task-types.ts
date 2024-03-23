@@ -2,12 +2,12 @@
 export type TaskState = 'pending' | 'completed';
 
 export enum TaskPriority {
-    Unknown,
-    Critical,
-    High,
-    Medium,
-    Low,
-    Obsolete = 99
+    unknown,
+    critical,
+    high,
+    medium,
+    low,
+    obsolete = 99
 }
 
 export interface NewTaskData extends Record<string, any> {

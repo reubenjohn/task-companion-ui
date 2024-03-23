@@ -38,7 +38,7 @@ async function getUserId(): Promise<UserId> {
   return userId
 }
 
-const getTaskListKey = (userId: UserId, version: string = '') => `user:tasklist:${userId}:default${version}`
+const getTaskListKey = (userId: UserId) => `user:tasklist:${userId}:default`
 
 type KVPipeline = ReturnType<typeof kv.multi>
 
