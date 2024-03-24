@@ -1,4 +1,4 @@
-import { Task } from './types';
+import { Task } from './task-types';
 
 export type EventType = "create-task" | "delete-task" | "update-task" | "message";
 

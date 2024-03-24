@@ -1,59 +1,46 @@
-import * as React from 'react'
-import { type UseChatHelpers } from 'ai/react'
-
-import { shareChat } from '@/app/actions'
-import { Button } from '@/components/ui/button'
-import { PromptForm } from '@/components/prompt-form'
 import { ButtonScrollToBottom } from '@/components/button-scroll-to-bottom'
-import { IconRefresh, IconShare, IconStop } from '@/components/ui/icons'
-import { FooterText } from '@/components/footer'
-import { ChatShareDialog } from '@/components/chat-share-dialog'
+import { PromptForm } from '@/components/prompt-form'
+import { Button } from '@/components/ui/button'
+import { IconRefresh, IconStop } from '@/components/ui/icons'
+import { Event } from '@/lib/event-types'
 
-export interface ChatPanelProps
-  extends Pick<
-    UseChatHelpers,
-    | 'append'
-    | 'isLoading'
-    | 'reload'
-    | 'messages'
-    | 'stop'
-    | 'input'
-    | 'setInput'
-  > {
-  id?: string
-  title?: string
+export interface ChatPanelProps {
+  events: Event[]
+  input: string
+  setInput: (input: string) => void
+  onSubmitUserMessage: (message: { content: string }) => Promise<void>
+  regenerateResponse: () => void
+  isLoading: boolean
+  stopResponding: () => void
 }
 
 export function EventPanel({
-  id,
-  title,
   isLoading,
-  stop,
-  append,
-  reload,
+  stopResponding,
+  events,
+  onSubmitUserMessage,
+  regenerateResponse: reload,
   input,
-  setInput,
-  messages
+  setInput
 }: ChatPanelProps) {
-  const [shareDialogOpen, setShareDialogOpen] = React.useState(false)
-
+  const lastEventIsAssistant = events.length > 0 && events[0]?.role == 'system'
   return (
     <div className="w-full bg-gradient-to-b from-muted/30 from-0% to-muted/30 to-50% animate-in duration-300 ease-in-out dark:from-background/10 dark:from-10% dark:to-background/80">
       <ButtonScrollToBottom />
       <div className="mx-auto sm:max-w-2xl sm:px-4">
         <div className="px-4 py-0 space-y-4 border-t shadow-lg bg-background sm:rounded-t-xl sm:border md:py-4">
-          {isLoading && messages?.length >= 2 && <div className="flex items-center justify-center h-12">
+          {(isLoading || lastEventIsAssistant) && <div className="flex items-center justify-center h-12">
             {isLoading ? (
               <Button
                 variant="outline"
-                onClick={() => stop()}
+                onClick={() => stopResponding()}
                 className="bg-background"
               >
                 <IconStop className="mr-2" />
                 Stop generating
               </Button>
             ) : (
-              messages?.length >= 2 && (
+              (
                 <div className="flex space-x-2">
                   <Button variant="outline" onClick={() => reload()}>
                     <IconRefresh className="mr-2" />
@@ -65,17 +52,14 @@ export function EventPanel({
           </div>}
           <PromptForm
             onSubmit={async value => {
-              await append({
-                id,
+              await onSubmitUserMessage({
                 content: value,
-                role: 'user'
               })
             }}
             input={input}
             setInput={setInput}
             isLoading={isLoading}
           />
-          <FooterText className="hidden sm:block" />
         </div>
       </div>
     </div>

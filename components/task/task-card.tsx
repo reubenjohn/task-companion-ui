@@ -1,10 +1,10 @@
 "use client"
 
-import { Task, TaskState } from '@/lib/types';
-import { buttonVariants } from '../ui/button';
-import { cn } from '@/lib/utils';
-import { IconTrash } from '../ui/icons';
 import { deleteTask, toggleTask } from '@/app/actions';
+import { Task } from '@/lib/task-types';
+import { cn } from '@/lib/utils';
+import { buttonVariants } from '../ui/button';
+import { IconTrash } from '../ui/icons';
 
 export interface TaskProps extends React.ComponentProps<'div'> {
     task: Task

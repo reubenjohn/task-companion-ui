@@ -5,8 +5,6 @@ import { nanoid } from '@/lib/utils'
 import { getFeed } from '../actions'
 
 export default async function IndexPage() {
-  const id = nanoid()
-
   async function tryGetFeed(): Promise<{ events: Event[], error?: string }> {
     try {
       return { events: await getFeed() }
@@ -20,10 +18,10 @@ export default async function IndexPage() {
 
   return (<div className='flex flex-row size-full'>
     <div className='flex flex-col grow w-1/2 border-r my-4 items-center'>
-      <TaskList id={id} />
+      <TaskList />
     </div>
     <div className='flex flex-col grow w-1/2'>
-      <EventWindow id={id} events={events} eventsError={error} />
+      <EventWindow events={events} eventsError={error} />
     </div>
   </div>)
 }

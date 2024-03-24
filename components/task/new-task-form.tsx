@@ -1,7 +1,7 @@
 "use client"
 
 import { addTask } from "@/app/actions";
-import { TaskPriority } from "@/lib/types";
+import { TaskPriority } from '@/lib/task-types';
 import toast from "react-hot-toast";
 
 export interface NewTaskBarProps extends React.ComponentProps<'div'> {
@@ -15,7 +15,7 @@ export function NewTaskForm({ children }: NewTaskBarProps) {
             toast.error("Cannot create a task without a title")
             return
         }
-        await addTask({ title, priority: TaskPriority.Unknown })
+        await addTask({ title, priority: TaskPriority.unknown })
     }
     return (
         <form action={onCreateTask} className='flex row my-2 justify-center'>
