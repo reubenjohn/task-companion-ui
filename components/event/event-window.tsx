@@ -42,7 +42,7 @@ export function EventWindow({ className, events, eventsError }: ChatProps) {
       content: message.content
     })
     sendUserPrompt(await getUserId(), message.content)
-  }, [])
+  }, [sendUserPrompt])
 
   if (eventsError) {
     toast.error(`Failed to fetch feed: ${JSON.stringify(eventsError)}`)

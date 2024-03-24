@@ -10,7 +10,7 @@ export interface CollapsibleToolsUseProps {
 export function CollapsibleToolsUse(tools: CollapsibleToolsUseProps) {
     return (<>
         {tools && <Accordion.Root type="single" collapsible className='AccordionRoot mb-4' orientation='horizontal'>
-            {Object.values(tools).map(toolUse => <CollapsibleToolUse {...toolUse} />)}
+            {Object.values(tools).map(toolUse => <CollapsibleToolUse key={toolUse.runId} {...toolUse} />)}
         </Accordion.Root>}
     </>);
 }
