@@ -1,88 +1,61 @@
 'use client'
 
-import { useChat, type Message } from 'ai/react'
-
-import { addEvent } from '@/app/actions'
-import { EventPanel } from '@/components/event/event-panel'
-import { EventScrollAnchor } from '@/components/event/event-scroll-anchor'
+import { addEvent, getUserId } from '@/app/actions'
 import { EmptyScreen } from '@/components/empty-screen'
 import { EventList } from '@/components/event/event-list'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle
-} from '@/components/ui/dialog'
-import { DraftEvent, Event, MessageEvent } from '@/lib/event-types'
-import { useLocalStorage } from '@/lib/hooks/use-local-storage'
+import { EventPanel } from '@/components/event/event-panel'
+import { EventScrollAnchor } from '@/components/event/event-scroll-anchor'
+import { Event, MessageEvent } from '@/lib/event-types'
+import { CompanionResponseCompletionCallback, useCompanion } from '@/lib/hooks/use-companion'
 import { cn } from '@/lib/utils'
-import { ChatRequestOptions, CreateMessage } from 'ai'
-import { usePathname, useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { toast } from 'react-hot-toast'
-import { Button } from '../ui/button'
-import { Input } from '../ui/input'
+import { AssistantDraftProps } from '../companion/companion-draft'
 
 const IS_PREVIEW = process.env.VERCEL_ENV === 'preview'
 export interface ChatProps extends React.ComponentProps<'div'> {
-  initialMessages?: Message[]
-  id?: string
   events: Event[]
   eventsError?: string
 }
 
-export function EventWindow({ id, initialMessages, className, events, eventsError }: ChatProps) {
-  const router = useRouter()
-  const path = usePathname()
-  const [previewToken, setPreviewToken] = useLocalStorage<string | null>(
-    'ai-token',
-    null
-  )
-  const [previewTokenDialog, setPreviewTokenDialog] = useState(IS_PREVIEW)
-  const [previewTokenInput, setPreviewTokenInput] = useState(previewToken ?? '')
-  const { messages, append, reload, stop, isLoading, input, setInput } =
-    useChat({
-      initialMessages,
-      id,
-      body: {
-        id,
-        previewToken
-      },
-      onResponse(response) {
-        if (response.status === 401) {
-          toast.error(response.statusText)
-        }
-      },
-      onFinish() {
-        // if (!path.includes('chat')) {
-        //   window.history.pushState({}, '', `/chat/${id}`)
-        // }
-      }
+export function EventWindow({ className, events, eventsError }: ChatProps) {
+  const onCompanionResponseCompleted = useCallback<CompanionResponseCompletionCallback>(content => {
+    addEvent<MessageEvent>({
+      type: 'message',
+      role: 'assistant',
+      creationUtcMillis: -1,
+      content
     })
+      .catch(error => toast.error(`Failed to save assistant message: ${error}`))
+  }, [])
+  const regenerateResponse = useCallback(() => { toast.error("Regenerating responses is currently not supported") }, [])
 
-  async function onAppend(message: CreateMessage, chatRequestOptions: ChatRequestOptions | undefined) {
-    const messageEvent: DraftEvent<MessageEvent> = {
+  const [assistantContent, tools, isLoading, sendUserPrompt, stopResponding] = useCompanion(onCompanionResponseCompleted)
+
+  const [input, setInput] = useState('')
+
+  const onSubmitUserMessage = useCallback(async (message: { content: string }) => {
+    await addEvent<MessageEvent>({
       type: 'message',
       role: 'user',
       creationUtcMillis: -1,
       content: message.content
-    }
-    await addEvent(messageEvent)
-    return await append(message, chatRequestOptions)
-  }
+    })
+    sendUserPrompt(await getUserId(), message.content)
+  }, [])
 
   if (eventsError) {
     toast.error(`Failed to fetch feed: ${JSON.stringify(eventsError)}`)
   }
 
+  const assistantDraft: AssistantDraftProps | undefined = (assistantContent || Object.keys(tools).length > 0) && { content: assistantContent, tools } || undefined
+
   return (
     <>
       <div className={cn('pt-4 md:pt-4 grow overflow-auto', className)}>
-        {messages.length + events.length ? (
+        {events.length ? (
           <>
-            <EventList events={events} />
+            <EventList events={events} assistantDraft={assistantDraft} />
             <EventScrollAnchor trackVisibility={isLoading} />
           </>
         ) : (
@@ -90,51 +63,14 @@ export function EventWindow({ id, initialMessages, className, events, eventsErro
         )}
       </div>
       <EventPanel
-        id={id}
-        isLoading={isLoading}
-        stop={stop}
-        append={onAppend}
-        reload={reload}
-        messages={messages}
+        events={events}
         input={input}
         setInput={setInput}
+        onSubmitUserMessage={onSubmitUserMessage}
+        isLoading={isLoading}
+        stopResponding={stopResponding}
+        regenerateResponse={regenerateResponse}
       />
-
-      <Dialog open={previewTokenDialog} onOpenChange={setPreviewTokenDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Enter your OpenAI Key</DialogTitle>
-            <DialogDescription>
-              If you have not obtained your OpenAI API key, you can do so by{' '}
-              <a
-                href="https://platform.openai.com/signup/"
-                className="underline"
-              >
-                signing up
-              </a>{' '}
-              on the OpenAI website. This is only necessary for preview
-              environments so that the open source community can test the app.
-              The token will be saved to your browser&apos;s local storage under
-              the name <code className="font-mono">ai-token</code>.
-            </DialogDescription>
-          </DialogHeader>
-          <Input
-            value={previewTokenInput}
-            placeholder="OpenAI API key"
-            onChange={e => setPreviewTokenInput(e.target.value)}
-          />
-          <DialogFooter className="items-center">
-            <Button
-              onClick={() => {
-                setPreviewToken(previewTokenInput)
-                setPreviewTokenDialog(false)
-              }}
-            >
-              Save Token
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </>
   )
 }

@@ -12,9 +12,10 @@ import {
 import { IconArrowElbow, IconPlus } from '@/components/ui/icons'
 import { useRouter } from 'next/navigation'
 
-export interface PromptProps
-  extends Pick<UseChatHelpers, 'input' | 'setInput'> {
+export interface PromptProps {
   onSubmit: (value: string) => void
+  input: string,
+  setInput: (input: string) => void,
   isLoading: boolean
 }
 

@@ -6,17 +6,19 @@ import { IconArrowRight } from '@/components/ui/icons'
 
 const exampleMessages = [
   {
-    heading: 'Explain technical concepts',
-    message: `What is a "serverless function"?`
+    heading: 'Suggest tasks to complete today',
+    message: 'Suggest some important tasks to complete today along with a justification for each task.'
   },
   {
-    heading: 'Summarize an article',
-    message: 'Summarize the following article for a 2nd grader: \n'
+    heading: 'Estimate tasks',
+    message: `List the top 10 most important pending tasks, and estimate how much time it will take to complete each`
   },
   {
-    heading: 'Draft an email',
-    message: `Draft an email to my boss about the following: \n`
-  }
+    heading: 'Plan my day',
+    message: `The time is ${new Date().toLocaleTimeString()}. 
+    Estimate the time required to complete each task and propose a realistic schedule for completing my pending tasks today. 
+    Do not ask me for estimates, guess them yourself to the best of your ability.`
+  },
 ]
 
 export function EmptyScreen({ setInput }: Pick<UseChatHelpers, 'setInput'>) {
@@ -24,7 +26,7 @@ export function EmptyScreen({ setInput }: Pick<UseChatHelpers, 'setInput'>) {
     <div className="mx-auto max-w-2xl px-4">
       <div className="rounded-lg border bg-background p-8">
         <h1 className="mb-2 text-lg font-semibold">
-          Welcome to Next.js AI Chatbot!
+          Welcome to Task Companion!
         </h1>
         <p className="mb-2 leading-normal text-muted-foreground">
           This is an open source AI chatbot app template built with{' '}

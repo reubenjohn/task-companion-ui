@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
 import { auth } from '@/auth'
-import { CreateTaskEvent, DeleteTask, DraftEvent, Event, UpdateTask } from '@/lib/event-types'
+import { CreateTaskEvent, DeleteTask, DraftEvent, Event, MessageEvent, UpdateTask } from '@/lib/event-types'
 import { NewTaskData, Task, TaskPriority, TaskState } from '@/lib/task-types'
 import { type Chat } from '@/lib/types'
 
@@ -32,7 +32,7 @@ export async function getChats(userId?: string | null) {
 
 type UserId = string
 
-async function getUserId(): Promise<UserId> {
+export async function getUserId(): Promise<UserId> {
   const userId = (await auth())?.user.id
   if (!userId) { throw new Error("No user ID. Is the user authenticated?") }
   return userId
@@ -155,7 +155,7 @@ export async function toggleTask(taskData: Task, newState: TaskState) {
 
 const getFeedKey = (userId: string) => `user:feed:${userId}:default`
 
-export async function addEvent(eventData: DraftEvent<Event>) {
+export async function addEvent<T extends Event>(eventData: DraftEvent<T>) {
   const pipeline = kv.pipeline()
   const handleResult = await addEventToPipeline(eventData, pipeline)
   const [result]: [number | null] = await pipeline.exec()
