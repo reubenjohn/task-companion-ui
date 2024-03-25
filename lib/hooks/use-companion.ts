@@ -1,10 +1,7 @@
-import { addEvent } from "@/app/actions"
 import { ToolsUse } from "@/components/companion/collapsible-tools-use"
 import { useCallback, useState } from "react"
-import toast from "react-hot-toast"
-import { DraftEvent, MessageEvent } from "../event-types"
 
-export type SendUserPromptCallback = (userId: string, userMessageContent: string) => void
+export type SendUserPromptCallback = (userId: string, userMessageContent: string, companionUrl: string) => void
 export type StopRespondingCallback = () => void
 export type CompanionResponseCompletionCallback = (content: string) => void
 
@@ -17,13 +14,12 @@ export function useCompanion(onResponseCompleted: CompanionResponseCompletionCal
         webSocket?.send(JSON.stringify({ command: 'close' }))
     }, [webSocket])
 
-    const sendUserPrompt = (userId: string, userMessageContent: string) => {
+    const sendUserPrompt = (userId: string, userMessageContent: string, companionUrl: string) => {
         setWebSocket(undefined)
         setAssistantContent('')
         setTools({})
 
-        const wsOrigin = `${window.location.protocol === 'http:' ? 'ws:' : 'wss:'}//${window.location.host}`;
-        const newWebSocket = new WebSocket(new URL(`${wsOrigin}/api/ai/companion/chat/${userId}`))
+        const newWebSocket = new WebSocket(new URL(`${companionUrl}/companion/chat/${userId}`))
 
         newWebSocket.onopen = (_) =>
             newWebSocket.send(JSON.stringify({ command: 'respond', payload: { 'user_id': 4802052, user_input: userMessageContent } }));

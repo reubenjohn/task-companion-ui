@@ -8,6 +8,14 @@ import { auth } from '@/auth'
 import { CreateTaskEvent, DeleteTask, DraftEvent, Event, MessageEvent, UpdateTask } from '@/lib/event-types'
 import { NewTaskData, Task, TaskPriority, TaskState } from '@/lib/task-types'
 import { type Chat } from '@/lib/types'
+import { env } from 'process'
+
+
+export async function getAICompanionUrl(): Promise<string> {
+  const aiCompanionUrl = env["AI_WEBSOCKET_API_URL"] || ''
+  console.log(`aiCompanionUrl=${aiCompanionUrl}`)
+  return aiCompanionUrl
+}
 
 export async function getChats(userId?: string | null) {
   if (!userId) {

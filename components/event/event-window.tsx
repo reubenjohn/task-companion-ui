@@ -1,6 +1,6 @@
 'use client'
 
-import { addEvent, getUserId } from '@/app/actions'
+import { addEvent, getAICompanionUrl, getUserId } from '@/app/actions'
 import { EmptyScreen } from '@/components/empty-screen'
 import { EventList } from '@/components/event/event-list'
 import { EventPanel } from '@/components/event/event-panel'
@@ -41,7 +41,8 @@ export function EventWindow({ className, events, eventsError }: ChatProps) {
       creationUtcMillis: -1,
       content: message.content
     })
-    sendUserPrompt(await getUserId(), message.content)
+
+    sendUserPrompt(await getUserId(), message.content, await getAICompanionUrl())
   }, [sendUserPrompt])
 
   if (eventsError) {

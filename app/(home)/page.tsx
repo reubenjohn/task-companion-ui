@@ -1,7 +1,6 @@
 import { EventWindow } from '@/components/event/event-window'
 import { TaskList } from '@/components/task/task-list'
 import { Event } from '@/lib/event-types'
-import { nanoid } from '@/lib/utils'
 import { getFeed } from '../actions'
 
 export default async function IndexPage() {
