@@ -2,7 +2,6 @@
 
 import { getTasks } from '@/app/actions'
 import { NewTaskForm } from './new-task-form'
-import { NewTaskFormElements } from './new-task-form-elements'
 import { TaskCard } from './task-card'
 
 
@@ -18,9 +17,7 @@ export async function TaskList({ }: TaskListProps) {
     return (
         <div className='w-full max-w-2xl p-4'>
             <h1 className='text-lg font-semibold m-2'>Tasks</h1>
-            <NewTaskForm>
-                <NewTaskFormElements />
-            </NewTaskForm>
+            <NewTaskForm />
             <div className='overflow-auto'>
                 {activeTasks.length > 0 && <>
                     <div className='border mt-2 mb-8' />
