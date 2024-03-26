@@ -5,16 +5,14 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
 import { auth } from '@/auth'
-import { CreateTaskEvent, DeleteTask, DraftEvent, Event, MessageEvent, UpdateTask } from '@/lib/event-types'
-import { NewTaskData, Task, TaskPriority, TaskState } from '@/lib/task-types'
+import { CreateTaskEvent, DeleteTask, DraftEvent, Event, UpdateTask } from '@/lib/event-types'
+import { NewTaskData, Task, TaskState } from '@/lib/task-types'
 import { type Chat } from '@/lib/types'
 import { env } from 'process'
 
 
 export async function getAICompanionUrl(): Promise<string> {
-  const aiCompanionUrl = env["AI_WEBSOCKET_API_URL"] || ''
-  console.log(`aiCompanionUrl=${aiCompanionUrl}`)
-  return aiCompanionUrl
+  return env["AI_WEBSOCKET_API_URL"] || ''
 }
 
 export async function getChats(userId?: string | null) {

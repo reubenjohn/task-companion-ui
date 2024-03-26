@@ -1,5 +1,6 @@
 import { ToolsUse } from "@/components/companion/collapsible-tools-use"
 import { useCallback, useState } from "react"
+import toast from "react-hot-toast"
 
 export type SendUserPromptCallback = (userId: string, userMessageContent: string, companionUrl: string) => void
 export type StopRespondingCallback = () => void
@@ -32,8 +33,11 @@ export function useCompanion(onResponseCompleted: CompanionResponseCompletionCal
                 const payload = JSON.parse(data.substring('on_tool_end|'.length))
                 setTools(tools => ({ ...tools, [payload.runId]: { ...tools[payload.runId], outputs: payload.output } }))
             } else if (data.startsWith('|')) {
-                const tokens = data.substring(1);
+                const tokens = data.substring(1)
                 setAssistantContent(content => content + tokens)
+            } else if (data.startsWith('error|')) {
+                const message = data.substring('error|'.length)
+                toast.error(message)
             }
         }
 
