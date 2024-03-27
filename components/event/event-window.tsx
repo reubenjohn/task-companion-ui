@@ -6,7 +6,7 @@ import { EventList } from '@/components/event/event-list'
 import { EventPanel } from '@/components/event/event-panel'
 import { EventScrollAnchor } from '@/components/event/event-scroll-anchor'
 import { Event, MessageEvent } from '@/lib/event-types'
-import { CompanionResponseCompletionCallback, useCompanion } from '@/lib/hooks/use-companion'
+import { CompanionResponseCompletionCallback, queryCompanion } from '@/lib/hooks/use-companion'
 import { cn } from '@/lib/utils'
 import { useCallback, useState } from 'react'
 import { toast } from 'react-hot-toast'
@@ -19,18 +19,18 @@ export interface ChatProps extends React.ComponentProps<'div'> {
 }
 
 export function EventWindow({ className, events, eventsError }: ChatProps) {
-  const onCompanionResponseCompleted = useCallback<CompanionResponseCompletionCallback>(content => {
+  const onCompanionResponseCompleted = useCallback<CompanionResponseCompletionCallback>((creationUtcMillis, content) => {
     addEvent<MessageEvent>({
       type: 'message',
       role: 'assistant',
-      creationUtcMillis: -1,
+      creationUtcMillis,
       content
     })
       .catch(error => toast.error(`Failed to save assistant message: ${error}`))
   }, [])
   const regenerateResponse = useCallback(() => { toast.error("Regenerating responses is currently not supported") }, [])
 
-  const [assistantContent, tools, isLoading, sendUserPrompt, stopResponding] = useCompanion(onCompanionResponseCompleted)
+  const [assistantContent, tools, isLoading, sendUserPrompt, stopResponding] = queryCompanion(onCompanionResponseCompleted)
 
   const [input, setInput] = useState('')
 

@@ -161,7 +161,7 @@ export async function toggleTask(taskData: Task, newState: TaskState) {
 
 const getFeedKey = (userId: string) => `user:feed:${userId}:default`
 
-export async function addEvent<T extends Event>(eventData: DraftEvent<T>) {
+export async function addEvent<T extends Event>(eventData: T) {
   const pipeline = kv.pipeline()
   const handleResult = await addEventToPipeline(eventData, pipeline)
   const [result]: [number | null] = await pipeline.exec()
@@ -169,13 +169,16 @@ export async function addEvent<T extends Event>(eventData: DraftEvent<T>) {
 }
 
 export async function addEventToPipeline(
-  eventData: DraftEvent<Event>,
+  eventData: Event,
   pipeline: KVPipeline
 ): Promise<(result: number | null) => Event> {
   const userId = await getUserId()
 
   const feedKey = getFeedKey(userId)
-  const event = { ...eventData, creationUtcMillis: Date.now() } as Event;
+  const event = { ...eventData } as Event;
+  if (eventData.type !== 'message' || eventData.role !== 'assistant') {
+    event.creationUtcMillis = Date.now()
+  }
 
   console.log(`User '${userId}' adding event '${JSON.stringify(event)}' to list ${feedKey}`)
   const scoreMember = { score: event.creationUtcMillis, member: JSON.stringify(event) }
