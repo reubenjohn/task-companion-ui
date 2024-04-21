@@ -17,12 +17,12 @@
 
 - OpenAI `gpt-3.5-turbo` powered chat interface.
 - User interface to manage the to-do list (left-pane).
+- Ability for the LLM to answer questions about created tasks.
 - Dynamic event feed showcasing task activities, offering real-time to-do list updates and chats (right-pane).
 - GitHub authentication with [NextAuth.js](https://github.com/nextauthjs/next-auth) for secure access.
 
 ## Roadmap
 
-- Ability for the LLM to answer questions about created tasks.
 - AI can ask questions and make suggestions about created or modified tasks.
 - AI creates tasks.
 - AI suggests tasks modifications (priority, deadline, title, description, subtasks, etc).

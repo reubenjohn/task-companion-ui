@@ -6,7 +6,7 @@ import { EventList } from '@/components/event/event-list'
 import { EventPanel } from '@/components/event/event-panel'
 import { EventScrollAnchor } from '@/components/event/event-scroll-anchor'
 import { Event, MessageEvent } from '@/lib/event-types'
-import { CompanionResponseCompletionCallback, queryCompanion } from '@/lib/hooks/use-companion'
+import { CompanionResponseCompletionCallback, useQueryCompanion } from '@/lib/hooks/use-companion'
 import { cn } from '@/lib/utils'
 import { useCallback, useState } from 'react'
 import { toast } from 'react-hot-toast'
@@ -30,7 +30,7 @@ export function EventWindow({ className, events, eventsError }: ChatProps) {
   }, [])
   const regenerateResponse = useCallback(() => { toast.error("Regenerating responses is currently not supported") }, [])
 
-  const [assistantContent, tools, isLoading, sendUserPrompt, stopResponding] = queryCompanion(onCompanionResponseCompleted)
+  const [assistantContent, tools, isLoading, sendUserPrompt, stopResponding] = useQueryCompanion(onCompanionResponseCompleted)
 
   const [input, setInput] = useState('')
 

@@ -6,7 +6,7 @@ export type SendUserPromptCallback = (userId: string, userMessageContent: string
 export type StopRespondingCallback = () => void
 export type CompanionResponseCompletionCallback = (creationUtcMillis: number, content: string) => void
 
-export function queryCompanion(onResponseCompleted: CompanionResponseCompletionCallback): [string, ToolsUse, boolean, SendUserPromptCallback, StopRespondingCallback] {
+export function useQueryCompanion(onResponseCompleted: CompanionResponseCompletionCallback): [string, ToolsUse, boolean, SendUserPromptCallback, StopRespondingCallback] {
     const [webSocket, setWebSocket] = useState<WebSocket | undefined>(undefined)
     const [assistantContent, setAssistantContent] = useState('')
     const [creationUtcMillis, setCreationUtcMillis] = useState<number | null>(null)
