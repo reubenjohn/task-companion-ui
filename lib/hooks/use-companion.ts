@@ -24,7 +24,7 @@ export function queryCompanion(onResponseCompleted: CompanionResponseCompletionC
         const newWebSocket = new WebSocket(new URL(`${companionUrl}/companion/chat/${userId}`))
 
         newWebSocket.onopen = (_) =>
-            newWebSocket.send(JSON.stringify({ command: 'respond', payload: { user_input: userMessageContent } }));
+            newWebSocket.send(JSON.stringify({ command: 'respond', payload: { user_input: userMessageContent, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone } }));
 
         newWebSocket.onmessage = ({ data }) => {
             if (data.startsWith('message_time|')) {
