@@ -37,10 +37,10 @@ export async function POST(req: Request) {
 
   const stream = OpenAIStream(res, {
     async onCompletion(completion) {
-      const messageEvent: DraftEvent<MessageEvent> = {
+      const messageEvent: MessageEvent = {
         type: 'message',
         role: 'system',
-        creationUtcMillis: -1,
+        creationUtcMillis: Date.now(),
         content: completion
       }
       await addEvent(messageEvent)

@@ -38,7 +38,7 @@ export function EventWindow({ className, events, eventsError }: ChatProps) {
     await addEvent<MessageEvent>({
       type: 'message',
       role: 'user',
-      creationUtcMillis: -1,
+      creationUtcMillis: Date.now(),
       content: message.content
     })
 

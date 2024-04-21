@@ -53,20 +53,22 @@ export async function addTask(taskData: NewTaskData) {
 
   const taskListKey = getTaskListKey(userId)
   const taskKey = new Date().getTime() + Math.random()
+  const creationUtcMillis = Date.now()
   const task: Task = {
     id: taskKey,
     title: taskData.title,
     state: 'pending',
-    priority: taskData.priority as number
+    priority: taskData.priority as number,
+    eventKeys: [creationUtcMillis]
   }
 
   const transaction = kv.multi()
   console.log(`User '${userId}' adding task '${JSON.stringify(task)}' to list ${taskListKey}`)
   transaction.zadd(taskListKey, { score: task.id, member: JSON.stringify(task) })
 
-  const event: DraftEvent<CreateTaskEvent> = {
+  const event: CreateTaskEvent = {
     type: "create-task",
-    creationUtcMillis: -1,
+    creationUtcMillis,
     task
   }
   const resultHandler = await addEventToPipeline(event, transaction)
@@ -106,9 +108,9 @@ export async function deleteTask(task: Task) {
 
   const transaction = kv.multi()
   transaction.zremrangebyscore(taskListKey, taskId, taskId)
-  const event: DraftEvent<DeleteTask> = {
+  const event: DeleteTask = {
     type: 'delete-task',
-    creationUtcMillis: -1,
+    creationUtcMillis: Date.now(),
     task,
   };
   const resultHandler = await addEventToPipeline(event, transaction)
@@ -128,11 +130,11 @@ export async function toggleTask(taskData: Task, newState: TaskState) {
   const taskListKey = getTaskListKey(userId)
   const taskId = taskData.id
 
+  const creationUtcMillis = Date.now()
   const task: Task = {
-    id: taskId,
-    title: taskData.title,
+    ...taskData,
     state: newState,
-    priority: taskData.priority
+    eventKeys: [...taskData.eventKeys, creationUtcMillis]
   }
 
   const transaction = kv.multi()
@@ -140,9 +142,9 @@ export async function toggleTask(taskData: Task, newState: TaskState) {
   transaction.zremrangebyscore(taskListKey, taskId, taskId)
   transaction.zadd(taskListKey, { score: taskId, member: JSON.stringify(task) })
 
-  const event: DraftEvent<UpdateTask> = {
+  const event: UpdateTask = {
     type: "update-task",
-    creationUtcMillis: -1,
+    creationUtcMillis,
     task,
     previousValues: { state: taskData.state }
   }
@@ -169,16 +171,12 @@ export async function addEvent<T extends Event>(eventData: T) {
 }
 
 export async function addEventToPipeline(
-  eventData: Event,
+  event: Event,
   pipeline: KVPipeline
 ): Promise<(result: number | null) => Event> {
   const userId = await getUserId()
 
   const feedKey = getFeedKey(userId)
-  const event = { ...eventData } as Event;
-  if (eventData.type !== 'message' || eventData.role !== 'assistant') {
-    event.creationUtcMillis = Date.now()
-  }
 
   console.log(`User '${userId}' adding event '${JSON.stringify(event)}' to list ${feedKey}`)
   const scoreMember = { score: event.creationUtcMillis, member: JSON.stringify(event) }

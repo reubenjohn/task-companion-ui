@@ -1,3 +1,4 @@
+import { EventBase } from "./event-types";
 
 export type TaskState = 'pending' | 'completed';
 
@@ -19,4 +20,5 @@ export interface Task extends Record<string, any> {
     id: number;
     title: string;
     state: TaskState;
+    eventKeys: EventBase['creationUtcMillis'][],
 }
